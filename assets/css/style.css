@@ -177,13 +177,14 @@ html.modal-open { overflow: hidden; }
 .modal {
   width: min(700px, calc(100vw - 24px)); max-width: none; max-height: min(88vh, 860px); max-height: min(88dvh, 860px);
   padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg);
-  overflow: hidden; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 50px -20px var(--accent);
+  overflow: hidden; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
 }
 .modal[open] { display: flex; flex-direction: column; }
 .modal::backdrop { background: rgba(0, 0, 0, 0.62); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .modal-bar { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; background: var(--panel); border-bottom: 1px solid var(--line); }
 .modal-count { color: var(--dim); font-size: 12px; white-space: nowrap; }
-.modal-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px 8px; }
+.modal-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px 8px; scrollbar-width: none; }
+.modal-body::-webkit-scrollbar { display: none; }
 .modal-body > p { max-width: none; }
 .modal-nav { display: flex; justify-content: space-between; gap: 10px; padding: 10px; background: var(--panel); border-top: 1px solid var(--line); }
 .modal-nav button, .modal-close {
