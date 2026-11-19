@@ -85,6 +85,8 @@ All text on the site comes from [`assets/js/data.js`](assets/js/data.js). Edit t
 
 Each team entry has a `group` of `lead`, `member` or `intern`, which decides the block it appears in. Empty fields are hidden.
 
+Clicking a team card opens that member's full profile. The profile shows the optional `experience`, `education` and `work` lists and any links set on the entry.
+
 ## Commands
 
 | Command | What it does |
@@ -92,6 +94,7 @@ Each team entry has a `group` of `lead`, `member` or `intern`, which decides the
 | `help` | List commands |
 | `about` | About the group |
 | `team` | Who is on the team |
+| `member <id>` | Show one team member in full |
 | `projects` | What the group is working on |
 | `project <id>` | Show one project |
 | `contact` | Contact details |

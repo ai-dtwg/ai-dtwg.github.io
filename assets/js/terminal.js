@@ -92,18 +92,16 @@
     team: {
       desc: "who is on the team",
       run: () => {
-        const card = (m) => h("li", { class: "card" },
+        // The whole card is clickable and opens the member's details.
+        const card = (m) => h("li", { class: "card", "data-cmd": m.id ? "member " + m.id : null },
           h("div", { class: "card-head" },
             h("span", { class: "avatar", "aria-hidden": "true" }, initials(m.name)),
             h("div", null,
               h("div", { class: "name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
               m.role && h("div", { class: "role" }, m.role))),
           m.bio && h("p", { class: "bio" }, m.bio),
-          m.expertise && m.expertise.length ? h("ul", { class: "tags", "aria-label": "Expertise" }, m.expertise.map((t) => h("li", null, t))) : null,
-          m.website && h("div", { class: "meta" }, link(m.website, bare(m.website))),
-          m.github && h("div", { class: "meta" }, link("https://github.com/" + m.github, "@" + m.github)),
-          m.linkedin && h("div", { class: "meta" }, link(m.linkedin, "LinkedIn")),
-          m.email && h("div", { class: "meta" }, link("mailto:" + m.email, m.email)));
+          tags(m.expertise),
+          m.id && h("div", { class: "meta more" }, cmd("member " + m.id)));
         const leads = D.team.filter((m) => m.group === "lead");
         const interns = D.team.filter((m) => m.group === "intern");
         const members = D.team.filter((m) => m.group !== "lead" && m.group !== "intern");
@@ -112,6 +110,50 @@
           leads.length ? [h("h3", { class: "sub" }, leads.length > 1 ? "leads (" + leads.length + ")" : "lead"), h("ul", { class: "grid" }, leads.map(card))] : null,
           members.length ? [h("h3", { class: "sub" }, "members (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
           interns.length ? [h("h3", { class: "sub" }, interns.length > 1 ? "interns (" + interns.length + ")" : "intern"), h("ul", { class: "grid" }, interns.map(card))] : null,
+          h("p", { class: "dim tip" }, "Click a card to see the full profile."),
+        ];
+      },
+    },
+
+    member: {
+      desc: "show one team member",
+      usage: "<id>",
+      complete: () => D.team.map((m) => m.id).filter(Boolean),
+      run: (args) => {
+        const m = D.team.find((x) => x.id && x.id === (args[0] || "").toLowerCase());
+        if (!m) {
+          return h("p", { class: args[0] ? "err" : null },
+            args[0] ? "member: no such member: " + args[0] + ". " : "usage: member <id>. ",
+            "Available: ", D.team.filter((x) => x.id).map((x, i) => [i ? ", " : "", cmd("member " + x.id)]));
+        }
+        const rows = (items) => h("ul", { class: "rows" }, items.map((it) => h("li", null,
+          h("span", { class: "row-title" }, it.title),
+          it.place && h("span", { class: "row-place" }, it.place),
+          it.years && h("span", { class: "row-years" }, it.years))));
+        const section = (title, items) => (items && items.length ? [h("h3", { class: "sub" }, title), rows(items)] : null);
+        const links = [
+          m.website && ["website", link(m.website, bare(m.website))],
+          m.github && ["github", link("https://github.com/" + m.github, "@" + m.github)],
+          m.linkedin && ["linkedin", link(m.linkedin, bare(m.linkedin).replace(/^www\./, ""))],
+          m.scholar && ["scholar", link(m.scholar, "Google Scholar")],
+          m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
+          m.email && ["email", link("mailto:" + m.email, m.email)],
+        ].filter(Boolean);
+        const empty = !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
+        return [
+          h("div", { class: "profile" },
+            h("span", { class: "avatar big", "aria-hidden": "true" }, initials(m.name)),
+            h("div", null,
+              h("h2", { class: "profile-name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
+              m.role && h("div", { class: "role" }, m.role))),
+          m.bio && h("p", null, m.bio),
+          m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, "expertise"), tags(m.expertise)] : null,
+          section("experience", m.experience),
+          section("education", m.education),
+          section("selected work", m.work),
+          links.length ? [h("h3", { class: "sub" }, "links"), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+          empty && h("p", { class: "dim" }, "No details added yet."),
+          h("p", { class: "dim" }, "Back to ", cmd("team"), "."),
         ];
       },
     },
@@ -249,6 +291,8 @@
 
   const bare = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
+  const tags = (list) => (list && list.length ? h("ul", { class: "tags", "aria-label": "Expertise" }, list.map((t) => h("li", null, t))) : null);
+
   function initials(name) {
     const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w) && !w.endsWith("."));
     return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
@@ -352,8 +396,9 @@
 
   // Clickable commands (tabs and inline links), typed out as if the visitor ran them.
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-cmd]");
-    if (btn) { submit(btn.dataset.cmd, { animate: true }); return; }
+    // Links inside a clickable card still behave as links, and selecting text does not trigger it.
+    const btn = e.target.closest("a") ? null : e.target.closest("[data-cmd]");
+    if (btn && !(btn.matches(".card") && String(getSelection()))) { submit(btn.dataset.cmd, { animate: true }); return; }
     // Clicking empty terminal space focuses the prompt, without breaking text selection or links.
     if (screen.contains(e.target) && !e.target.closest("a, button, input") && !String(getSelection())) {
       input.focus({ preventScroll: true });

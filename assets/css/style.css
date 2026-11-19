@@ -157,6 +157,21 @@ a:hover, a:focus-visible { color: var(--accent); }
 .tags { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tags li { font-size: 12px; line-height: 1.5; color: var(--accent); border: 1px solid var(--line); padding: 1px 7px; border-radius: 2px; }
 
+.card[data-cmd] { cursor: pointer; }
+.card .more { margin-top: 2px; }
+.card .more .kbd::before { content: "→ "; }
+.tip { margin-top: 12px; }
+.profile { display: flex; align-items: center; gap: 14px; margin: 2px 0 12px; }
+.profile-name { margin: 0; font-size: 16px; font-weight: 700; color: var(--fg); line-height: 1.4; }
+.profile-name .km { display: block; font-weight: 400; color: var(--dim); font-size: 14px; }
+.profile .role { color: var(--accent-2); }
+.avatar.big { width: 56px; height: 56px; font-size: 18px; }
+.rows { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 8px; max-width: 78ch; }
+.rows li { display: grid; grid-template-columns: 1fr auto; gap: 0 16px; border-left: 2px solid var(--line); padding-left: 12px; }
+.rows .row-title { color: var(--fg); font-weight: 600; }
+.rows .row-years { color: var(--dim); font-size: 13px; white-space: nowrap; grid-column: 2; grid-row: 1; }
+.rows .row-place { color: var(--dim); font-size: 13px; grid-column: 1 / -1; }
+
 .plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .proj { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; }
 .proj:hover { border-left-color: var(--accent); }
@@ -210,14 +225,15 @@ a:hover, a:focus-visible { color: var(--accent); }
 [data-fx="on"] .kv > *,
 [data-fx="on"] .help > * { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
 [data-fx="on"] .grid > li,
+[data-fx="on"] .rows > li,
 [data-fx="on"] .plist > li { animation: pop 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(2) { animation-delay: 60ms; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(3) { animation-delay: 120ms; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(4) { animation-delay: 180ms; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(5) { animation-delay: 240ms; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(6) { animation-delay: 300ms; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(7) { animation-delay: 360ms; }
-[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist) > :nth-child(n + 8) { animation-delay: 420ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(2) { animation-delay: 60ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(3) { animation-delay: 120ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(4) { animation-delay: 180ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(5) { animation-delay: 240ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(6) { animation-delay: 300ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(7) { animation-delay: 360ms; }
+[data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(n + 8) { animation-delay: 420ms; }
 
 /* banner wipes in, then a highlight sweeps across it */
 @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
@@ -250,6 +266,8 @@ a:hover, a:focus-visible { color: var(--accent); }
   .grid { gap: 8px; }
   .card { padding: 10px 12px; }
   .outp p { max-width: none; }
+  .rows li { grid-template-columns: 1fr; }
+  .rows .row-years { grid-column: 1; grid-row: auto; }
 }
 @media (max-width: 700px) {
   #bg.on { opacity: 0.38; }
