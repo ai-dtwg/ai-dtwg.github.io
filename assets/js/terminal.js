@@ -484,12 +484,15 @@
         h("span", { class: "dots", "aria-hidden": "true" }, h("i"), h("i"), h("i")),
         h("span", { class: "bar-title" }, "~/" + KINDS[k].path + "/" + it.id),
         h("span", { class: "modal-count" }, (current + 1) + " / " + items.length),
+        navigator.clipboard && h("button", { type: "button", class: "modal-close", "data-modal": "copy", "aria-label": "Copy a link to this " + KINDS[k].label }, "copy link"),
         h("button", { type: "button", class: "modal-close", "data-modal": "close", "aria-label": "Close" }, "close")),
       h("div", { class: "modal-body" + (dir ? " from-" + dir : "") }, KINDS[k].view(it)),
       items.length > 1 && h("div", { class: "modal-nav" },
         h("button", { type: "button", "data-modal": "prev", "aria-label": "Previous " + KINDS[k].label + ": " + prev.name }, h("span", { "aria-hidden": "true" }, "← "), h("span", { class: "who" }, prev.name)),
         h("button", { type: "button", "data-modal": "next", "aria-label": "Next " + KINDS[k].label + ": " + next.name }, h("span", { class: "who" }, next.name), h("span", { "aria-hidden": "true" }, " →"))));
     if (!modal.open) { modal.showModal(); root.classList.add("modal-open"); }
+    // Each popup has its own address, e.g. /#member-sobon, so it can be shared.
+    window.history.replaceState(null, "", "#" + k + "-" + it.id);
     const target = modal.querySelector('[data-modal="' + (focus || "close") + '"]');
     if (target) target.focus({ preventScroll: true });
     emit("swg:cmd");
@@ -502,9 +505,29 @@
     return i >= 0;
   }
 
+  // Opens whatever the address points at: "#team" runs a command, "#member-sobon" opens a popup.
+  async function openHash() {
+    const target = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    const deep = /^(member|project)-([a-z0-9-]+)$/.exec(target);
+    if (deep && KINDS[deep[1]].items.some((x) => x.id === deep[2])) {
+      if (!modal.open) await submit(KINDS[deep[1]].path, { animate: true });
+      openById(deep[1], deep[2]);
+    } else if (/^[a-z]+$/.test(target) && Object.prototype.hasOwnProperty.call(commands, target) && target !== "clear") {
+      if (modal.open) modal.close();
+      await submit(target, { animate: true });
+    }
+  }
+  window.addEventListener("hashchange", openHash);
+
   modal.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-modal]");
     if (e.target === modal || (btn && btn.dataset.modal === "close")) modal.close();
+    else if (btn && btn.dataset.modal === "copy") {
+      navigator.clipboard.writeText(location.href).then(() => {
+        btn.textContent = "copied";
+        setTimeout(() => { if (btn.isConnected) btn.textContent = "copy link"; }, 1600);
+      }, () => { btn.textContent = "copy failed"; });
+    }
     else if (btn && btn.dataset.modal === "prev") show(kind, current - 1, "left", "prev");
     else if (btn && btn.dataset.modal === "next") show(kind, current + 1, "right", "next");
   });
@@ -513,7 +536,10 @@
     if (e.key === "ArrowLeft") { e.preventDefault(); show(kind, current - 1, "left", "prev"); }
     else if (e.key === "ArrowRight") { e.preventDefault(); show(kind, current + 1, "right", "next"); }
   });
-  modal.addEventListener("close", () => root.classList.remove("modal-open"));
+  modal.addEventListener("close", () => {
+    root.classList.remove("modal-open");
+    window.history.replaceState(null, "", location.pathname + location.search);
+  });
   // Swipe left or right to move to the next or previous one on touch screens.
   let swipe = null;
   modal.addEventListener("touchstart", (e) => { swipe = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
@@ -554,10 +580,7 @@
     form.classList.remove("busy");
     busy = false;
 
-    const target = decodeURIComponent(location.hash.slice(1)).toLowerCase();
-    if (/^[a-z]+$/.test(target) && Object.prototype.hasOwnProperty.call(commands, target) && target !== "clear") {
-      await submit(target, { animate: true });
-    }
+    await openHash();
     if (matchMedia("(pointer: fine)").matches) input.focus({ preventScroll: true });
   })();
 })();
