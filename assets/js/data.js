@@ -3,6 +3,9 @@
  * Anything marked TODO is a placeholder to replace.
  */
 window.SWG = {
+  // Public address of the site, used for shared links and search engines
+  site: "https://ai-dtwg.com",
+
   org: {
     short: "DTWG",
     name: "Digital Transformation Working Group",

@@ -20,7 +20,7 @@ Ministry of Post and Telecommunications, Cambodia
   <img src="https://img.shields.io/badge/build%20step-none-3ee07f?style=flat-square" alt="Build step: none">
 </p>
 
-[Live site](https://ai-dtwg.github.io) · [Team](https://ai-dtwg.github.io/#team) · [Projects](https://ai-dtwg.github.io/#projects) · [Contact](https://ai-dtwg.github.io/#contact)
+[Live site](https://ai-dtwg.com) · [Team](https://ai-dtwg.com/#team) · [Projects](https://ai-dtwg.com/#projects) · [Contact](https://ai-dtwg.com/#contact)
 
 </div>
 
@@ -34,6 +34,8 @@ It is a static site. There is nothing to install and nothing to build. The one l
 
 - Terminal interface with command history, tab completion and clickable commands
 - Sections for about, team, projects and contact, each with a direct link such as `/#team`
+- Popups for each member and project, with next and previous, and a shareable link such as `/#member-sobon`
+- Link preview image for social sharing and structured data for search engines
 - Animated 3D background built with three.js, plus motion on the banner, cards and output
 - Animation can be switched off with `fx off`, and stays off for visitors who prefer reduced motion
 - Four color themes: green, amber, ice and paper
@@ -59,6 +61,8 @@ Then open <http://localhost:8000>.
 .
 ├── index.html              Page shell
 ├── 404.html                Not found page
+├── robots.txt, sitemap.xml For search engines
+├── CNAME                   Custom domain
 ├── assets
 │   ├── css/style.css       Themes and layout
 │   ├── js/data.js          Site content
@@ -106,7 +110,7 @@ Clicking a team card opens that member's full profile in a popup, with buttons, 
 
 ## Deployment
 
-The site is published with GitHub Pages from the `main` branch. Every push to `main` goes live at <https://ai-dtwg.github.io> within a minute or two.
+The site is published with GitHub Pages from the `main` branch. Every push to `main` goes live at <https://ai-dtwg.com> within a minute or two. The `CNAME` file sets that custom domain.
 
 If the site does not update, check **Settings → Pages** and make sure the source is set to **Deploy from a branch**, `main`, `/ (root)`.
 

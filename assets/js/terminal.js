@@ -550,6 +550,40 @@
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(kind, current + (dx < 0 ? 1 : -1), dx < 0 ? "right" : "left");
   }, { passive: true });
 
+  // Describe the group and its members to search engines (schema.org JSON-LD), built from the same data.
+  (function structuredData() {
+    const site = (D.site || location.origin).replace(/\/$/, "");
+    const person = (m) => {
+      const title = /^(Dr|Mr|Ms|Mrs|Prof)\.\s+/.exec(m.name);
+      const same = [m.website, m.github && "https://github.com/" + m.github, m.linkedin, m.scholar, m.huggingface].filter(Boolean);
+      return {
+        "@type": "Person",
+        name: m.name.replace(/^(Dr|Mr|Ms|Mrs|Prof)\.\s+/, ""),
+        honorificPrefix: title ? title[1] : undefined,
+        jobTitle: m.role || undefined,
+        description: m.bio || undefined,
+        url: site + "/#member-" + m.id,
+        sameAs: same.length ? same : undefined,
+      };
+    };
+    const data = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: D.group.name + ", " + D.org.short,
+      alternateName: D.group.km,
+      description: D.group.about[0],
+      url: site + "/",
+      logo: site + "/assets/img/logo.svg",
+      parentOrganization: D.org.parent && { "@type": "GovernmentOrganization", name: D.org.parent.name, alternateName: D.org.parent.km, url: D.org.parent.url },
+      member: D.team.filter((m) => m.id && m.role).map(person),
+      knowsAbout: D.focus.map((f) => f.title),
+    };
+    const el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.textContent = JSON.stringify(data);
+    document.head.append(el);
+  })();
+
   /* ── boot ── */
   (async function boot() {
     let saved = null;
