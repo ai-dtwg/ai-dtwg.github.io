@@ -79,7 +79,7 @@
       run: () => [
         heading("about", "អំពីយើង"),
         D.group.about.map((p) => h("p", null, p)),
-        h("h3", { class: "sub" }, "what we work on"),
+        h("h3", { class: "sub" }, "expertise"),
         h("dl", { class: "kv" }, D.focus.map((f) => [h("dt", null, f.title), h("dd", null, f.desc)])),
         h("p", { class: "dim" },
           D.team.length + " members, " + D.projects.length + " projects. See ", cmd("team"), " or ", cmd("projects"), "."),
@@ -94,17 +94,21 @@
             h("span", { class: "avatar", "aria-hidden": "true" }, initials(m.name)),
             h("div", null,
               h("div", { class: "name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
-              h("div", { class: "role" }, m.role))),
-          m.focus && h("div", { class: "meta" }, "focus: " + m.focus),
+              m.role && h("div", { class: "role" }, m.role))),
+          m.bio && h("p", { class: "bio" }, m.bio),
+          m.expertise && m.expertise.length ? h("ul", { class: "tags", "aria-label": "Expertise" }, m.expertise.map((t) => h("li", null, t))) : null,
           m.website && h("div", { class: "meta" }, link(m.website, bare(m.website))),
           m.github && h("div", { class: "meta" }, link("https://github.com/" + m.github, "@" + m.github)),
+          m.linkedin && h("div", { class: "meta" }, link(m.linkedin, "LinkedIn")),
           m.email && h("div", { class: "meta" }, link("mailto:" + m.email, m.email)));
         const leads = D.team.filter((m) => m.group === "lead");
-        const members = D.team.filter((m) => m.group !== "lead");
+        const interns = D.team.filter((m) => m.group === "intern");
+        const members = D.team.filter((m) => m.group !== "lead" && m.group !== "intern");
         return [
           heading("team", "សមាជិកក្រុម"),
           leads.length ? [h("h3", { class: "sub" }, leads.length > 1 ? "leads (" + leads.length + ")" : "lead"), h("ul", { class: "grid" }, leads.map(card))] : null,
           members.length ? [h("h3", { class: "sub" }, "members (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
+          interns.length ? [h("h3", { class: "sub" }, interns.length > 1 ? "interns (" + interns.length + ")" : "intern"), h("ul", { class: "grid" }, interns.map(card))] : null,
         ];
       },
     },
@@ -224,7 +228,7 @@
   const bare = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   function initials(name) {
-    const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w));
+    const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w) && !w.endsWith("."));
     return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
   }
 

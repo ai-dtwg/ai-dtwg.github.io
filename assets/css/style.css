@@ -131,7 +131,7 @@ a:hover, a:focus-visible { color: var(--accent); }
 .kv dt { color: var(--accent-2); }
 .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(232px, 100%), 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; align-items: start; }
 .card { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; border-radius: 3px; min-width: 0; }
 .card:hover { border-color: var(--accent); }
 .card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
@@ -143,6 +143,9 @@ a:hover, a:focus-visible { color: var(--accent); }
 .card .name .km { display: block; font-weight: 400; color: var(--dim); font-size: 13px; }
 .card .role { color: var(--accent-2); font-size: 13px; }
 .card .meta { color: var(--dim); font-size: 13px; overflow-wrap: anywhere; }
+.card .bio { margin: 0 0 8px; font-size: 13px; line-height: 1.6; max-width: none; }
+.tags { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tags li { font-size: 12px; line-height: 1.5; color: var(--accent); border: 1px solid var(--line); padding: 1px 7px; border-radius: 2px; }
 
 .plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .proj { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; }
