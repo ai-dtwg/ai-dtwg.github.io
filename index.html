@@ -12,8 +12,18 @@
   <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
   <link rel="preload" href="assets/fonts/KhmerDigital-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="assets/css/style.css">
+  <script>
+    // Set theme and effects before first paint. Effects default to off when the visitor prefers reduced motion.
+    (function () {
+      var d = document.documentElement, fx = null, theme = null;
+      try { fx = localStorage.getItem("fx"); theme = localStorage.getItem("theme"); } catch (e) {}
+      if (/^(green|amber|ice|paper)$/.test(theme)) d.dataset.theme = theme;
+      d.dataset.fx = fx === "on" || fx === "off" ? fx : (matchMedia("(prefers-reduced-motion: reduce)").matches ? "off" : "on");
+    })();
+  </script>
 </head>
 <body>
+  <canvas id="bg" aria-hidden="true"></canvas>
   <div class="term">
     <header class="bar">
       <div class="bar-top">
@@ -48,5 +58,6 @@
 
   <script src="assets/js/data.js"></script>
   <script src="assets/js/terminal.js"></script>
+  <script type="module" src="assets/js/scene.js"></script>
 </body>
 </html>

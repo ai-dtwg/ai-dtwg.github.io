@@ -8,7 +8,10 @@
   const input = $("#cmd");
   const screen = $("#screen");
   const tabs = [...document.querySelectorAll(".tabs button")];
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const root = document.documentElement;
+  // Effects (typing, motion, 3D background) can be switched off with the `fx` command.
+  const still = () => root.dataset.fx === "off";
+  const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
   const THEMES = ["green", "amber", "ice", "paper"];
   const history = [];
   let histPos = 0;
@@ -207,6 +210,20 @@
       },
     },
 
+    fx: {
+      desc: "turn animation on or off",
+      usage: "[on|off]",
+      complete: () => ["on", "off"],
+      run: (args) => {
+        const want = (args[0] || (still() ? "on" : "off")).toLowerCase();
+        if (want !== "on" && want !== "off") return h("p", { class: "err" }, "usage: fx [on|off]");
+        root.dataset.fx = want;
+        try { localStorage.setItem("fx", want); } catch (e) { /* storage unavailable */ }
+        emit("swg:fx", { on: want === "on" });
+        return h("p", null, "animation → ", h("span", { class: "ok" }, want));
+      },
+    },
+
     clear: { desc: "clear the screen", run: () => { out.replaceChildren(); return null; } },
 
     // small extras, not listed in help
@@ -241,6 +258,7 @@
     document.documentElement.dataset.theme = name;
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
     document.querySelector('meta[name="theme-color"]').setAttribute("content", bg);
+    emit("swg:theme");
   }
 
   /* ── execution ── */
@@ -252,7 +270,7 @@
     const entry = h("div", { class: "entry" }, h("div", { class: "echo" }, ps1(), typed));
     out.append(entry);
 
-    if (opts.animate && !reduceMotion) {
+    if (opts.animate && !still()) {
       for (const ch of line) { typed.textContent += ch; await sleep(28); }
       await sleep(120);
     } else {
@@ -272,7 +290,8 @@
     if (result) entry.append(h("div", { class: "outp" }, result));
 
     tabs.forEach((t) => t.classList.toggle("on", t.dataset.cmd === name.toLowerCase()));
-    if (opts.scroll !== false) entry.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+    emit("swg:cmd");
+    if (opts.scroll !== false) entry.scrollIntoView({ block: "start", behavior: still() ? "auto" : "smooth" });
   }
 
   async function submit(line, opts) {
@@ -341,6 +360,21 @@
     }
   });
 
+  // Cards lean toward the mouse.
+  if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    out.addEventListener("pointermove", (e) => {
+      const card = e.target.closest(".card");
+      if (!card || still()) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty("--ry", (((e.clientX - r.left) / r.width - 0.5) * 7).toFixed(2) + "deg");
+      card.style.setProperty("--rx", ((0.5 - (e.clientY - r.top) / r.height) * 7).toFixed(2) + "deg");
+    });
+    out.addEventListener("pointerout", (e) => {
+      const card = e.target.closest(".card");
+      if (card && !card.contains(e.relatedTarget)) { card.style.removeProperty("--rx"); card.style.removeProperty("--ry"); }
+    });
+  }
+
   /* ── boot ── */
   (async function boot() {
     let saved = null;
@@ -352,6 +386,19 @@
 
     busy = true;
     form.classList.add("busy");
+    // A short boot log, once per browser session.
+    let booted = true;
+    try { booted = sessionStorage.getItem("booted") === "1"; sessionStorage.setItem("booted", "1"); } catch (e) { /* storage unavailable */ }
+    if (!booted && !still()) {
+      const log = h("div", { class: "bootlog" });
+      out.append(log);
+      for (const text of ["mount /dtwg/ai-bigdata", "load " + D.team.length + " team members", "load " + D.projects.length + " projects", "start terminal"]) {
+        log.append(h("div", null, h("span", { class: "ok" }, "[ ok ] "), text));
+        await sleep(130);
+      }
+      await sleep(260);
+      log.remove();
+    }
     await run("banner", { animate: true, scroll: false });
     await run("about", { animate: true, scroll: false });
     out.append(h("p", { class: "dim" }, "Type ", cmd("help"), " to see the commands, or tap a tab above."));
