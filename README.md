@@ -38,6 +38,7 @@ It is a static site. There is nothing to install and nothing to build. The one l
 - Link preview image for social sharing and structured data for search engines
 - Animated 3D background built with three.js, plus motion on the banner, cards and output
 - Animation can be switched off with `fx off`, and stays off for visitors who prefer reduced motion
+- The 3D background is skipped on data saver and very slow connections
 - Four color themes: green, amber, ice and paper
 - Works on phones, tablets and desktops
 - Khmer text set in the Khmer Digital typeface

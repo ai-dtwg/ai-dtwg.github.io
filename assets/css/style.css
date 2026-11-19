@@ -1,19 +1,19 @@
 /* Khmer Digital by MPTC, SIL Open Font License 1.1 (see assets/fonts/OFL.txt) */
 @font-face {
   font-family: "Khmer Digital";
-  src: url("../fonts/KhmerDigital-Regular.ttf") format("truetype");
+  src: url("../fonts/KhmerDigital-Regular.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Khmer Digital";
-  src: url("../fonts/KhmerDigital-Medium.ttf") format("truetype");
+  src: url("../fonts/KhmerDigital-Medium.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
 }
 @font-face {
   font-family: "Khmer Digital";
-  src: url("../fonts/KhmerDigital-Bold.ttf") format("truetype");
+  src: url("../fonts/KhmerDigital-Bold.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }
@@ -120,7 +120,7 @@ a:hover, a:focus-visible { color: var(--accent); }
 .banner-meta .org { color: var(--dim); }
 .tagline { color: var(--accent-2); }
 .ministry {
-  display: inline-flex; align-items: center; gap: 12px; margin: 4px 0 6px; padding: 8px 14px 8px 8px; max-width: 100%;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 12px; margin: 4px 0 6px; padding: 8px 14px 8px 8px; max-width: 100%;
   border: 1px solid var(--line); border-radius: 3px; background: var(--panel); color: var(--fg);
 }
 .ministry:hover, .ministry:focus-visible { border-color: var(--accent); color: var(--fg); }

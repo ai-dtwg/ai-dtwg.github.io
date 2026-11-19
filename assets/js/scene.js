@@ -276,4 +276,15 @@ window.addEventListener("pointermove", (e) => {
   pointer.ty = (e.clientY / window.innerHeight) * 2 - 1;
 }, { passive: true });
 
-if (root.dataset.fx !== "off") start();
+// Skip the 3D background on data saver, very slow connections and low-memory devices,
+// unless the visitor asked for it with `fx on`. The rest of the site is unaffected.
+function constrained() {
+  const c = navigator.connection;
+  const slow = !!c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ""));
+  const lowMemory = typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 1;
+  let asked = false;
+  try { asked = localStorage.getItem("fx") === "on"; } catch (e) { /* storage unavailable */ }
+  return (slow || lowMemory) && !asked;
+}
+
+if (root.dataset.fx !== "off" && !constrained()) start();
