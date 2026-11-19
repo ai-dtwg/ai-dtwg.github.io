@@ -83,6 +83,16 @@ a:hover, a:focus-visible { color: var(--accent); }
 .tabs button::before { content: "./"; opacity: 0.55; }
 .tabs button:hover, .tabs button:focus-visible { color: var(--fg); }
 .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+.tabs .lang-toggle {
+  margin-left: auto; align-self: center; font-family: var(--khmer); font-size: 13px; line-height: 1.6; color: var(--accent);
+  border: 1px solid var(--line); border-radius: 3px; padding: 1px 10px; flex: none;
+}
+.tabs .lang-toggle::before { content: none; }
+.tabs .lang-toggle .short { display: none; }
+.tabs .lang-toggle:hover, .tabs .lang-toggle:focus-visible { border-color: var(--accent); color: var(--accent); }
+/* Khmer needs more room between lines than Latin text */
+html[lang="km"] body { line-height: 1.95; }
+html[lang="km"] .card .bio { line-height: 1.85; }
 
 /* ── screen ───────────────────────────────────────────── */
 .screen {
@@ -307,6 +317,11 @@ html.modal-open { overflow: hidden; }
   .bar-top { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
   .tabs { padding: 0 4px; }
   .tabs button { flex: 1 0 auto; padding-inline: 8px; }
+  .tabs button::before { content: none; }
+  .tabs button { padding-inline: 7px; }
+  .tabs .lang-toggle { flex: none; margin-left: 4px; margin-right: 6px; padding-inline: 9px; }
+  .tabs .lang-toggle .full { display: none; }
+  .tabs .lang-toggle .short { display: inline; }
   .kv, .help { grid-template-columns: 1fr; }
   .kv dd, .help dd { margin-bottom: 8px; }
   .banner-meta .km { font-size: 15px; }
@@ -326,13 +341,15 @@ html.modal-open { overflow: hidden; }
   #bg.on { opacity: 0.38; }
 }
 @media (max-width: 380px) {
-  .tabs button::before { content: none; }
+  .tabs button { padding-inline: 5px; font-size: 12px; }
+  .tabs .lang-toggle { padding-inline: 7px; margin-inline: 2px 4px; }
   .bar-title { visibility: hidden; }
   .avatar { width: 36px; height: 36px; }
 }
 /* Touch screens: bigger tap targets, and 16px input text so iOS does not zoom on focus */
 @media (pointer: coarse) {
   .tabs button { min-height: 44px; }
+  .tabs .lang-toggle { min-height: 32px; }
   .prompt { min-height: 44px; align-items: center; }
   .prompt input { font-size: 16px; min-height: 44px; }
   .kbd { padding: 6px 2px; margin: -6px 0; }

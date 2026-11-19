@@ -7,12 +7,71 @@
   const form = $("#prompt");
   const input = $("#cmd");
   const screen = $("#screen");
-  const tabs = [...document.querySelectorAll(".tabs button")];
+  const tabs = [...document.querySelectorAll(".tabs button:not(.lang-toggle)")];
   const root = document.documentElement;
   // Effects (typing, motion, 3D background) can be switched off with the `fx` command.
   const still = () => root.dataset.fx === "off";
   const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
   const THEMES = ["green", "amber", "ice", "paper"];
+  const LANGS = { en: "English", km: "ខ្មែរ" };
+  let lang = "en";
+  let lastSection = "about";
+  // Interface text in Khmer, keyed by the English text. Anything missing falls back to English.
+  const KM = {
+    "list commands": "បង្ហាញបញ្ជីពាក្យបញ្ជា",
+    "about the group": "អំពីក្រុមការងារ",
+    "who is on the team": "សមាជិកក្រុម",
+    "show one team member": "បង្ហាញសមាជិកម្នាក់",
+    "what we are working on": "គម្រោងដែលយើងកំពុងធ្វើ",
+    "show one project": "បង្ហាញគម្រោងមួយ",
+    "contact details": "ព័ត៌មានទំនាក់ទំនង",
+    "show everything": "បង្ហាញទាំងអស់",
+    "show the banner": "បង្ហាញបដា",
+    "change colors": "ប្តូរពណ៌",
+    "turn animation on or off": "បើក ឬបិទចលនា",
+    "switch language": "ប្តូរភាសា",
+    "clear the screen": "សម្អាតអេក្រង់",
+    "history, auto-complete": "ប្រវត្តិពាក្យបញ្ជា និងការបំពេញស្វ័យប្រវត្តិ",
+    "expertise": "ជំនាញ",
+    "lead": "ប្រធានក្រុម",
+    "leads": "ប្រធានក្រុម",
+    "members": "សមាជិក",
+    "intern": "អ្នកហាត់ការ",
+    "interns": "អ្នកហាត់ការ",
+    "experience": "បទពិសោធន៍ការងារ",
+    "education": "ការសិក្សា",
+    "selected work": "ស្នាដៃ",
+    "projects": "គម្រោង",
+    "team": "ក្រុមការងារ",
+    "links": "តំណភ្ជាប់",
+    "details": "ព័ត៌មានលម្អិត",
+    "type of work": "ប្រភេទការងារ",
+    "view profile": "មើលប្រវត្តិរូប",
+    "view project": "មើលគម្រោង",
+    "Click a card to open the full profile.": "ចុចលើកាតដើម្បីមើលប្រវត្តិរូបពេញលេញ។",
+    "Click a project to open it.": "ចុចលើគម្រោងដើម្បីមើលលម្អិត។",
+    "No details added yet.": "មិនទាន់មានព័ត៌មានលម្អិតនៅឡើយទេ។",
+    "No contact details yet.": "មិនទាន់មានព័ត៌មានទំនាក់ទំនងនៅឡើយទេ។",
+    "Back to ": "ត្រឡប់ទៅ ",
+    "for ": "សម្រាប់ ",
+    "close": "បិទ",
+    "copy link": "ចម្លងតំណ",
+    "copied": "បានចម្លង",
+    "copy failed": "ចម្លងមិនបាន",
+    "website": "គេហទំព័រ",
+    "email": "អ៊ីមែល",
+    "address": "អាសយដ្ឋាន",
+    "status": "ស្ថានភាព",
+    "year": "ឆ្នាំ",
+    "owner": "អ្នកទទួលខុសត្រូវ",
+    "link": "តំណ",
+    "language": "ភាសា",
+    "animation": "ចលនា",
+    "theme": "ពណ៌",
+  };
+  const t = (text) => (lang === "km" && KM[text]) || text;
+  // Content from data.js: uses the "_km" version of a field when Khmer is on and one exists.
+  const L = (obj, key) => (lang === "km" && obj[key + "_km"]) || obj[key];
   const history = [];
   let histPos = 0;
   let busy = false;
@@ -72,20 +131,21 @@
       run: () => h("dl", { class: "help" },
         Object.entries(commands).filter(([, c]) => !c.hidden).map(([name, c]) => [
           h("dt", null, cmd(name), c.usage ? h("span", { class: "dim" }, " " + c.usage) : null),
-          h("dd", null, c.desc),
+          h("dd", null, t(c.desc)),
         ]),
-        h("dt", { class: "dim" }, "↑ / ↓ · Tab"), h("dd", null, "history, auto-complete")),
+        h("dt", { class: "dim" }, "↑ / ↓ · Tab"), h("dd", null, t("history, auto-complete"))),
     },
 
     about: {
       desc: "about the group",
       run: () => [
         heading("about", "អំពីយើង"),
-        D.group.about.map((p) => h("p", null, p)),
-        h("h3", { class: "sub" }, "expertise"),
-        h("dl", { class: "kv" }, D.focus.map((f) => [h("dt", null, f.title), h("dd", null, f.desc)])),
-        h("p", { class: "dim" },
-          D.team.length + " members, " + D.projects.length + " projects. See ", cmd("team"), " or ", cmd("projects"), "."),
+        L(D.group, "about").map((p) => h("p", null, p)),
+        h("h3", { class: "sub" }, t("expertise")),
+        h("dl", { class: "kv" }, D.focus.map((f) => [h("dt", null, L(f, "title")), h("dd", null, L(f, "desc"))])),
+        lang === "km"
+          ? h("p", { class: "dim" }, "សមាជិក " + D.team.length + " នាក់ និងគម្រោង " + D.projects.length + "។ មើល ", cmd("team"), " ឬ ", cmd("projects"), "។")
+          : h("p", { class: "dim" }, D.team.length + " members, " + D.projects.length + " projects. See ", cmd("team"), " or ", cmd("projects"), "."),
       ],
     },
 
@@ -97,20 +157,20 @@
           h("div", { class: "card-head" },
             avatar(m),
             h("div", null,
-              h("div", { class: "name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
-              m.role && h("div", { class: "role" }, m.role))),
-          m.bio && h("p", { class: "bio" }, m.bio),
+              h("div", { class: "name" }, L(m, "name"), m.km && h("span", { class: "km", lang: "km" }, m.km)),
+              m.role && h("div", { class: "role" }, L(m, "role")))),
+          m.bio && h("p", { class: "bio" }, L(m, "bio")),
           tags(m.expertise),
-          m.id && h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, "view profile")));
+          m.id && h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, t("view profile"))));
         const leads = D.team.filter((m) => m.group === "lead");
         const interns = D.team.filter((m) => m.group === "intern");
         const members = D.team.filter((m) => m.group !== "lead" && m.group !== "intern");
         return [
           heading("team", "សមាជិកក្រុម"),
-          leads.length ? [h("h3", { class: "sub" }, leads.length > 1 ? "leads (" + leads.length + ")" : "lead"), h("ul", { class: "grid" }, leads.map(card))] : null,
-          members.length ? [h("h3", { class: "sub" }, "members (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
-          interns.length ? [h("h3", { class: "sub" }, interns.length > 1 ? "interns (" + interns.length + ")" : "intern"), h("ul", { class: "grid" }, interns.map(card))] : null,
-          h("p", { class: "dim tip" }, "Click a card to open the full profile."),
+          leads.length ? [h("h3", { class: "sub" }, leads.length > 1 ? t("leads") + " (" + leads.length + ")" : t("lead")), h("ul", { class: "grid" }, leads.map(card))] : null,
+          members.length ? [h("h3", { class: "sub" }, t("members") + " (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
+          interns.length ? [h("h3", { class: "sub" }, interns.length > 1 ? t("interns") + " (" + interns.length + ")" : t("intern")), h("ul", { class: "grid" }, interns.map(card))] : null,
+          h("p", { class: "dim tip" }, t("Click a card to open the full profile.")),
         ];
       },
     },
@@ -126,7 +186,7 @@
             args[0] ? "member: no such member: " + args[0] + ". " : "usage: member <id>. ",
             "Available: ", D.team.filter((x) => x.id).map((x, i) => [i ? ", " : "", cmd("member " + x.id)]));
         }
-        return [profile(m), h("p", { class: "dim" }, "Back to ", cmd("team"), ".")];
+        return [profile(m), h("p", { class: "dim" }, t("Back to "), cmd("team"), ".")];
       },
     },
 
@@ -136,15 +196,15 @@
         heading("projects", "គម្រោង"),
         h("ul", { class: "plist" }, D.projects.map((p) => h("li", { class: "proj", "data-open": "project:" + p.id },
           h("div", { class: "proj-head" },
-            h("span", { class: "proj-name" }, p.name),
-            p.platform && h("span", { class: "proj-for" }, "for " + p.platform),
+            h("span", { class: "proj-name" }, L(p, "name")),
+            p.platform && h("span", { class: "proj-for" }, t("for ") + p.platform),
             p.status && h("span", { class: "tag " + p.status }, "[" + p.status + "]"),
             p.year && h("span", { class: "dim" }, p.year)),
-          h("p", null, p.summary),
+          h("p", null, L(p, "summary")),
           tags(p.tags, "Type of work"),
           (p.team || []).length ? h("div", { class: "crew" }, p.team.map((id) => D.team.find((m) => m.id === id)).filter(Boolean).map((m) => avatar(m, "tiny"))) : null,
-          h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, "view project"))))),
-        h("p", { class: "dim tip" }, "Click a project to open it."),
+          h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, t("view project")))))),
+        h("p", { class: "dim tip" }, t("Click a project to open it.")),
       ],
     },
 
@@ -159,7 +219,7 @@
             args[0] ? "project: no such project: " + args[0] + ". " : "usage: project <id>. ",
             "Available: ", D.projects.map((x, i) => [i ? ", " : "", cmd("project " + x.id)]));
         }
-        return [projectView(p), h("p", { class: "dim" }, "Back to ", cmd("projects"), ".")];
+        return [projectView(p), h("p", { class: "dim" }, t("Back to "), cmd("projects"), ".")];
       },
     },
 
@@ -168,18 +228,18 @@
       run: () => {
         const c = D.contact;
         const rows = [
-          c.lead && ["lead", c.lead],
-          c.website && ["website", link(c.website, bare(c.website))],
-          c.email && ["email", link("mailto:" + c.email, c.email)],
+          c.lead && [t("lead"), c.lead],
+          c.website && [t("website"), link(c.website, bare(c.website))],
+          c.email && [t("email"), link("mailto:" + c.email, c.email)],
           c.github && ["github", link(c.github, bare(c.github))],
           c.telegram && ["telegram", link(c.telegram, bare(c.telegram))],
-          c.address && ["address", c.address],
+          c.address && [t("address"), c.address],
         ].filter(Boolean);
         return [
           heading("contact", "ទំនាក់ទំនង"),
           rows.length
             ? h("dl", { class: "kv" }, rows.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))
-            : h("p", { class: "dim" }, "No contact details yet."),
+            : h("p", { class: "dim" }, t("No contact details yet.")),
         ];
       },
     },
@@ -195,8 +255,8 @@
         h("pre", { class: "banner", role: "img", "aria-label": D.group.name }, bigText(D.group.name)),
         h("p", { class: "banner-meta" },
           h("span", { class: "km", lang: "km" }, D.group.km),
-          h("span", { class: "org" }, D.group.kind + " · " + D.org.name + " (" + D.org.short + ")")),
-        h("p", { class: "tagline" }, "> " + D.group.tagline),
+          h("span", { class: "org" }, L(D.group, "kind") + " · " + (lang === "km" ? D.org.km : D.org.name) + " (" + D.org.short + ")")),
+        h("p", { class: "tagline" }, "> " + L(D.group, "tagline")),
         D.org.parent && h("a", { class: "ministry", href: D.org.parent.url, target: "_blank", rel: "noopener noreferrer" },
           h("img", { src: D.org.parent.logo, alt: "", width: "44", height: "44" }),
           h("span", null,
@@ -215,7 +275,7 @@
         if (!THEMES.includes(next)) return h("p", { class: "err" }, "theme: unknown theme '" + args[0] + "'. Choose one of: " + THEMES.join(", "));
         setTheme(next);
         try { localStorage.setItem("theme", next); } catch (e) { /* storage unavailable */ }
-        return h("p", null, "theme → ", h("span", { class: "ok" }, next));
+        return h("p", null, t("theme") + " → ", h("span", { class: "ok" }, next));
       },
     },
 
@@ -229,7 +289,28 @@
         root.dataset.fx = want;
         try { localStorage.setItem("fx", want); } catch (e) { /* storage unavailable */ }
         emit("swg:fx", { on: want === "on" });
-        return h("p", null, "animation → ", h("span", { class: "ok" }, want));
+        return h("p", null, t("animation") + " → ", h("span", { class: "ok" }, want));
+      },
+    },
+
+    lang: {
+      desc: "switch language",
+      usage: "[en|km]",
+      complete: () => Object.keys(LANGS),
+      run: (args) => {
+        const want = (args[0] || (lang === "km" ? "en" : "km")).toLowerCase();
+        if (!LANGS[want]) return h("p", { class: "err" }, "usage: lang [en|km]");
+        setLang(want);
+        try { localStorage.setItem("lang", want); } catch (e) { /* storage unavailable */ }
+        // Reprint the screen in the new language once this command has finished.
+        setTimeout(async () => {
+          out.replaceChildren();
+          await run("banner", { scroll: false });
+          await run(lastSection, { scroll: false });
+          out.append(hint());
+          window.scrollTo(0, 0);
+        }, 0);
+        return h("p", null, t("language") + " → ", h("span", { class: "ok" }, LANGS[want]));
       },
     },
 
@@ -266,12 +347,12 @@
       it.years && h("span", { class: "row-years" }, it.years))));
     const section = (title, items) => (items && items.length ? [h("h3", { class: "sub" }, title), rows(items)] : null);
     const links = [
-      m.website && ["website", link(m.website, bare(m.website))],
+      m.website && [t("website"), link(m.website, bare(m.website))],
       m.github && ["github", link("https://github.com/" + m.github, "@" + m.github)],
       m.linkedin && ["linkedin", link(m.linkedin, bare(m.linkedin).replace(/^www\./, ""))],
       m.scholar && ["scholar", link(m.scholar, "Google Scholar")],
       m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
-      m.email && ["email", link("mailto:" + m.email, m.email)],
+      m.email && [t("email"), link("mailto:" + m.email, m.email)],
     ].filter(Boolean);
     const mine = D.projects.filter((p) => (p.team || []).includes(m.id));
     const empty = !mine.length && !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
@@ -279,45 +360,45 @@
       h("div", { class: "profile" },
         avatar(m, "big"),
         h("div", null,
-          h("h2", { class: "profile-name", id: titleId || null }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
-          m.role && h("div", { class: "role" }, m.role))),
-      m.bio && h("p", null, m.bio),
-      m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, "expertise"), tags(m.expertise)] : null,
-      section("experience", m.experience),
-      section("education", m.education),
-      section("selected work", m.work),
-      mine.length ? [h("h3", { class: "sub" }, "projects"), h("ul", { class: "chips" }, mine.map((p) => h("li", null, chip("project", p))))] : null,
-      links.length ? [h("h3", { class: "sub" }, "links"), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
-      empty && h("p", { class: "dim" }, "No details added yet."),
+          h("h2", { class: "profile-name", id: titleId || null }, L(m, "name"), m.km && h("span", { class: "km", lang: "km" }, m.km)),
+          m.role && h("div", { class: "role" }, L(m, "role")))),
+      m.bio && h("p", null, L(m, "bio")),
+      m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, t("expertise")), tags(m.expertise)] : null,
+      section(t("experience"), m.experience),
+      section(t("education"), m.education),
+      section(t("selected work"), m.work),
+      mine.length ? [h("h3", { class: "sub" }, t("projects")), h("ul", { class: "chips" }, mine.map((p) => h("li", null, chip("project", p))))] : null,
+      links.length ? [h("h3", { class: "sub" }, t("links")), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+      empty && h("p", { class: "dim" }, t("No details added yet.")),
     ];
   }
 
   // Full view of one project. Used by the `project` command and by the popup.
   function projectView(p, titleId) {
     const facts = [
-      p.status && ["status", h("span", { class: "tag " + p.status }, "[" + p.status + "]")],
-      p.year && ["year", p.year],
-      p.owner && ["owner", p.owner],
-      p.link && ["link", link(p.link, bare(p.link))],
+      p.status && [t("status"), h("span", { class: "tag " + p.status }, "[" + p.status + "]")],
+      p.year && [t("year"), p.year],
+      p.owner && [t("owner"), p.owner],
+      p.link && [t("link"), link(p.link, bare(p.link))],
     ].filter(Boolean);
     const crew = (p.team || []).map((id) => D.team.find((m) => m.id === id)).filter(Boolean);
     return [
       h("div", { class: "profile" },
         h("div", null,
-          h("h2", { class: "profile-name", id: titleId || null }, p.name),
-          p.platform && h("div", { class: "role" }, "for " + p.platform))),
+          h("h2", { class: "profile-name", id: titleId || null }, L(p, "name")),
+          p.platform && h("div", { class: "role" }, t("for ") + p.platform))),
       p.image && h("img", { class: "shot", src: p.image, alt: "Screenshot of " + p.name, loading: "lazy" }),
-      h("p", null, p.summary),
-      p.details && h("p", null, p.details),
-      p.tags && p.tags.length ? [h("h3", { class: "sub" }, "type of work"), tags(p.tags, "Type of work")] : null,
-      crew.length ? [h("h3", { class: "sub" }, "team"), h("ul", { class: "chips" }, crew.map((m) => h("li", null, chip("member", m))))] : null,
-      facts.length ? [h("h3", { class: "sub" }, "details"), h("dl", { class: "kv" }, facts.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+      h("p", null, L(p, "summary")),
+      p.details && h("p", null, L(p, "details")),
+      p.tags && p.tags.length ? [h("h3", { class: "sub" }, t("type of work")), tags(p.tags, "Type of work")] : null,
+      crew.length ? [h("h3", { class: "sub" }, t("team")), h("ul", { class: "chips" }, crew.map((m) => h("li", null, chip("member", m))))] : null,
+      facts.length ? [h("h3", { class: "sub" }, t("details")), h("dl", { class: "kv" }, facts.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
     ];
   }
 
   // A button that opens another member or project popup.
   const chip = (k, it) => h("button", { type: "button", class: "chip", "data-open": k + ":" + it.id },
-    k === "member" ? avatar(it, "tiny") : null, it.name);
+    k === "member" ? avatar(it, "tiny") : null, L(it, "name"));
 
   // A member's photo, or their initials when there is no photo (or it fails to load).
   function avatar(m, size) {
@@ -336,6 +417,24 @@
     const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w) && !w.endsWith("."));
     return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
   }
+
+  function setLang(code) {
+    lang = code;
+    root.lang = code;
+    const toggle = $("#lang-toggle");
+    if (toggle) {
+      // The button shows the language you would switch to.
+      toggle.replaceChildren(...(code === "km"
+        ? [h("span", { class: "full" }, "English"), h("span", { class: "short" }, "EN")]
+        : ["ខ្មែរ"]));
+      toggle.lang = code === "km" ? "en" : "km";
+      toggle.setAttribute("aria-label", code === "km" ? "Switch to English" : "ប្តូរទៅភាសាខ្មែរ");
+    }
+  }
+
+  const hint = () => (lang === "km"
+    ? h("p", { class: "dim" }, "វាយ ", cmd("help"), " ដើម្បីមើលពាក្យបញ្ជា ឬចុចផ្ទាំងខាងលើ។")
+    : h("p", { class: "dim" }, "Type ", cmd("help"), " to see the commands, or tap a tab above."));
 
   function setTheme(name) {
     document.documentElement.dataset.theme = name;
@@ -372,7 +471,8 @@
     if (name.toLowerCase() === "clear") return;
     if (result) entry.append(h("div", { class: "outp" }, result));
 
-    tabs.forEach((t) => t.classList.toggle("on", t.dataset.cmd === name.toLowerCase()));
+    tabs.forEach((tab) => tab.classList.toggle("on", tab.dataset.cmd === name.toLowerCase()));
+    if (["about", "team", "projects", "contact", "all"].includes(name.toLowerCase())) lastSection = name.toLowerCase();
     emit("swg:cmd");
     if (opts.scroll !== false) entry.scrollIntoView({ block: "start", behavior: still() ? "auto" : "smooth" });
   }
@@ -484,12 +584,12 @@
         h("span", { class: "dots", "aria-hidden": "true" }, h("i"), h("i"), h("i")),
         h("span", { class: "bar-title" }, "~/" + KINDS[k].path + "/" + it.id),
         h("span", { class: "modal-count" }, (current + 1) + " / " + items.length),
-        navigator.clipboard && h("button", { type: "button", class: "modal-close", "data-modal": "copy", "aria-label": "Copy a link to this " + KINDS[k].label }, "copy link"),
-        h("button", { type: "button", class: "modal-close", "data-modal": "close", "aria-label": "Close" }, "close")),
+        navigator.clipboard && h("button", { type: "button", class: "modal-close", "data-modal": "copy", "aria-label": "Copy a link to this " + KINDS[k].label }, t("copy link")),
+        h("button", { type: "button", class: "modal-close", "data-modal": "close", "aria-label": "Close" }, t("close"))),
       h("div", { class: "modal-body" + (dir ? " from-" + dir : "") }, KINDS[k].view(it)),
       items.length > 1 && h("div", { class: "modal-nav" },
-        h("button", { type: "button", "data-modal": "prev", "aria-label": "Previous " + KINDS[k].label + ": " + prev.name }, h("span", { "aria-hidden": "true" }, "← "), h("span", { class: "who" }, prev.name)),
-        h("button", { type: "button", "data-modal": "next", "aria-label": "Next " + KINDS[k].label + ": " + next.name }, h("span", { class: "who" }, next.name), h("span", { "aria-hidden": "true" }, " →"))));
+        h("button", { type: "button", "data-modal": "prev", "aria-label": "Previous " + KINDS[k].label + ": " + prev.name }, h("span", { "aria-hidden": "true" }, "← "), h("span", { class: "who" }, L(prev, "name"))),
+        h("button", { type: "button", "data-modal": "next", "aria-label": "Next " + KINDS[k].label + ": " + next.name }, h("span", { class: "who" }, L(next, "name")), h("span", { "aria-hidden": "true" }, " →"))));
     if (!modal.open) { modal.showModal(); root.classList.add("modal-open"); }
     // Each popup has its own address, e.g. /#member-sobon, so it can be shared.
     window.history.replaceState(null, "", "#" + k + "-" + it.id);
@@ -524,9 +624,9 @@
     if (e.target === modal || (btn && btn.dataset.modal === "close")) modal.close();
     else if (btn && btn.dataset.modal === "copy") {
       navigator.clipboard.writeText(location.href).then(() => {
-        btn.textContent = "copied";
-        setTimeout(() => { if (btn.isConnected) btn.textContent = "copy link"; }, 1600);
-      }, () => { btn.textContent = "copy failed"; });
+        btn.textContent = t("copied");
+        setTimeout(() => { if (btn.isConnected) btn.textContent = t("copy link"); }, 1600);
+      }, () => { btn.textContent = t("copy failed"); });
     }
     else if (btn && btn.dataset.modal === "prev") show(kind, current - 1, "left", "prev");
     else if (btn && btn.dataset.modal === "next") show(kind, current + 1, "right", "next");
@@ -589,6 +689,10 @@
     let saved = null;
     try { saved = localStorage.getItem("theme"); } catch (e) { /* storage unavailable */ }
     if (THEMES.includes(saved)) setTheme(saved);
+    // Language: the visitor's saved choice, else Khmer for browsers set to Khmer, else English.
+    let savedLang = null;
+    try { savedLang = localStorage.getItem("lang"); } catch (e) { /* storage unavailable */ }
+    setLang(LANGS[savedLang] ? savedLang : (/^km\b/i.test(navigator.language || "") ? "km" : "en"));
 
     form.querySelector("#ps1").replaceWith(Object.assign(ps1(), { id: "ps1" }));
     $("#bar-title").textContent = "guest@" + D.group.host + ": ~";
@@ -610,7 +714,7 @@
     }
     await run("banner", { animate: true, scroll: false });
     await run("about", { animate: true, scroll: false });
-    out.append(h("p", { class: "dim" }, "Type ", cmd("help"), " to see the commands, or tap a tab above."));
+    out.append(hint());
     form.classList.remove("busy");
     busy = false;
 

@@ -39,6 +39,7 @@ It is a static site. There is nothing to install and nothing to build. The one l
 - Animated 3D background built with three.js, plus motion on the banner, cards and output
 - Animation can be switched off with `fx off`, and stays off for visitors who prefer reduced motion
 - The 3D background is skipped on data saver and very slow connections
+- English and Khmer, switched with the button in the tab bar or `lang km`
 - Four color themes: green, amber, ice and paper
 - Works on phones, tablets and desktops
 - Khmer text set in the Khmer Digital typeface
@@ -88,6 +89,8 @@ All text on the site comes from [`assets/js/data.js`](assets/js/data.js). Edit t
 | Projects | `projects` |
 | Contact details | `contact` |
 
+Any text field can have a Khmer version: add the same key with `_km` at the end, for example `bio` and `bio_km`. It is shown when the visitor switches to Khmer, and the English is used where there is none.
+
 Each team entry has a `group` of `lead`, `member` or `intern`, which decides the block it appears in. Empty fields are hidden.
 
 Clicking a team card opens that member's full profile in a popup, with buttons, arrow keys and swipe to move to the next or previous member. The profile shows the optional `experience`, `education` and `work` lists and any links set on the entry.
@@ -106,6 +109,7 @@ Clicking a team card opens that member's full profile in a popup, with buttons, 
 | `all` | Show everything |
 | `banner` | Show the banner |
 | `theme [green\|amber\|ice\|paper]` | Change colors |
+| `lang [en\|km]` | Switch language |
 | `fx [on\|off]` | Turn animation on or off |
 | `clear` | Clear the screen |
 

@@ -25,21 +25,35 @@ window.SWG = {
     kind: "Sub Working Group",
     km: "អនុក្រុមការងារបញ្ញាសិប្បនិម្មិត និងទិន្នន័យធំ",
     host: "ai-bigdata", // shown in the prompt: guest@ai-bigdata:~$
+    kind_km: "អនុក្រុមការងារ",
     tagline: "The AI and Big Data team of DTWG.",
+    tagline_km: "ក្រុមការងារ AI និង Big Data របស់ DTWG។",
     // One string per paragraph.
     about: [
       "We are the AI & Big Data sub working group of the Digital Transformation Working Group (DTWG) at the Ministry of Post and Telecommunications (MPTC). Anything in DTWG that involves AI or Big Data comes to us.",
       "The team combines research and engineering: computer vision, Khmer language technology, LLM applications and data analytics.",
     ],
+    // Khmer version of the same paragraphs, shown when the visitor switches language.
+    about_km: [
+      "យើងជាអនុក្រុមការងារបញ្ញាសិប្បនិម្មិត និងទិន្នន័យធំ នៃក្រុមការងារបរិវត្តកម្មឌីជីថល (DTWG) របស់ក្រសួងប្រៃសណីយ៍និងទូរគមនាគមន៍ (MPTC)។ រាល់ការងារក្នុង DTWG ដែលពាក់ព័ន្ធនឹង AI ឬ Big Data គឺជាការទទួលខុសត្រូវរបស់យើង។",
+      "ក្រុមយើងធ្វើទាំងការស្រាវជ្រាវ និងការអភិវឌ្ឍ៖ ចក្ខុវិស័យកុំព្យូទ័រ បច្ចេកវិទ្យាភាសាខ្មែរ កម្មវិធីប្រើប្រាស់ LLM និងការវិភាគទិន្នន័យ។",
+    ],
   },
 
   // The group's expertise
   focus: [
-    { key: "vision", title: "Computer Vision", desc: "Detection, segmentation and image analysis with deep learning." },
-    { key: "khmer", title: "Khmer Language", desc: "NLP, speech and OCR for Khmer." },
-    { key: "llm", title: "LLM Applications", desc: "Text-to-SQL and AI agents." },
-    { key: "data", title: "Big Data & Analytics", desc: "Data pipelines, dashboards and reporting." },
+    { key: "vision", title: "Computer Vision", desc: "Detection, segmentation and image analysis with deep learning.",
+      title_km: "ចក្ខុវិស័យកុំព្យូទ័រ", desc_km: "ការរកឃើញវត្ថុ ការបែងចែករូបភាព និងការវិភាគរូបភាព ដោយប្រើ Deep Learning។" },
+    { key: "khmer", title: "Khmer Language", desc: "NLP, speech and OCR for Khmer.",
+      title_km: "ភាសាខ្មែរ", desc_km: "NLP សំឡេង និង OCR សម្រាប់ភាសាខ្មែរ។" },
+    { key: "llm", title: "LLM Applications", desc: "Text-to-SQL and AI agents.",
+      title_km: "កម្មវិធីប្រើប្រាស់ LLM", desc_km: "Text-to-SQL និង AI Agent។" },
+    { key: "data", title: "Big Data & Analytics", desc: "Data pipelines, dashboards and reporting.",
+      title_km: "ទិន្នន័យធំ និងការវិភាគ", desc_km: "ការបញ្ជូន និងរៀបចំទិន្នន័យ ផ្ទាំងព័ត៌មាន និងរបាយការណ៍។" },
   ],
+
+  // Any text field can have a Khmer version by adding the same key with "_km" at the end
+  // (for example bio and bio_km). It is shown when the visitor switches to Khmer; without it the English is used.
 
   // The team. Clicking a card (or running `member <id>`) shows the full entry.
   //   id:         short slug used by the `member <id>` command
@@ -54,7 +68,9 @@ window.SWG = {
     {
       id: "sovanreach",
       name: "Dr. Kong Vungsovanreach", km: "", role: "Lead, AI & Big Data", group: "lead",
+      role_km: "ប្រធានអនុក្រុមការងារ AI និង Big Data",
       bio: "Postdoctoral researcher at Chungbuk National University, where he completed his PhD in Big Data in 2026. Has published 18 papers and was a software engineer before moving into research.",
+      bio_km: "អ្នកស្រាវជ្រាវក្រោយបណ្ឌិតនៅសាកលវិទ្យាល័យជាតិ Chungbuk ជាកន្លែងដែលលោកបានបញ្ចប់ថ្នាក់បណ្ឌិតផ្នែក Big Data នៅឆ្នាំ ២០២៦។ លោកបានបោះពុម្ពផ្សាយអត្ថបទស្រាវជ្រាវចំនួន ១៨ និងធ្លាប់ជាវិស្វករកម្មវិធី មុនពេលងាកមកធ្វើការស្រាវជ្រាវ។",
       expertise: ["Computer vision", "Deep learning", "Medical AI", "LLM applications", "Big data"],
       experience: [
         { title: "Postdoctoral Researcher", place: "AI Convergence Lab, Chungbuk National University", years: "2026 to now" },
@@ -80,7 +96,9 @@ window.SWG = {
     {
       id: "sobon",
       name: "Mr. Phon Sobon", km: "", role: "AI Engineer", group: "member",
+      role_km: "វិស្វករ AI",
       bio: "AI engineer at DTWG and a former data analyst at MPTC. Builds AI for the Khmer language.",
+      bio_km: "វិស្វករ AI នៅ DTWG និងជាអតីតអ្នកវិភាគទិន្នន័យនៅ MPTC។ លោកបង្កើត AI សម្រាប់ភាសាខ្មែរ។",
       expertise: ["NLP", "Speech", "Computer vision", "Data analytics"],
       experience: [
         { title: "AI Engineer", place: "Digital Transformation Working Group, MPTC", years: "2025 to now" },
@@ -104,11 +122,11 @@ window.SWG = {
     // TODO: add a bio, expertise, experience and education for Mr. Khem Thay.
     {
       id: "thay",
-      name: "Mr. Khem Thay", km: "", role: "Member", group: "member", bio: "", expertise: [],
+      name: "Mr. Khem Thay", km: "", role: "Member", role_km: "សមាជិក", group: "member", bio: "", expertise: [],
       linkedin: "https://www.linkedin.com/in/thay-khem-4811a4229/", website: "", github: "", email: "",
     },
     // TODO: replace with the intern's name. Add one entry per intern.
-    { id: "intern", name: "Intern", km: "", role: "", group: "intern", bio: "", expertise: [], website: "", github: "", email: "" },
+    { id: "intern", name: "Intern", name_km: "អ្នកហាត់ការ", km: "", role: "", group: "intern", bio: "", expertise: [], website: "", github: "", email: "" },
   ],
 
   // Projects.
@@ -125,6 +143,8 @@ window.SWG = {
       name: "Face Check-in",
       platform: "EventKH",
       summary: "Attendees check in to events on EventKH with their face.",
+      name_km: "ចុះវត្តមានដោយស្កេនមុខ",
+      summary_km: "អ្នកចូលរួមចុះវត្តមានក្នុងកម្មវិធីនៅលើ EventKH ដោយប្រើមុខរបស់ខ្លួន។",
       tags: ["Face recognition"],
       team: [], status: "", year: "", details: "", owner: "", link: "",
     },
@@ -133,6 +153,8 @@ window.SWG = {
       name: "Khmer ASR",
       platform: "Chaktomuk (CTM)",
       summary: "Khmer speech recognition for the Chaktomuk (CTM) platform. It turns spoken Khmer into text.",
+      name_km: "សម្គាល់សំឡេងភាសាខ្មែរ (ASR)",
+      summary_km: "ការសម្គាល់សំឡេងភាសាខ្មែរ សម្រាប់ប្រព័ន្ធ Chaktomuk (CTM)។ វាបំប្លែងសំឡេងនិយាយភាសាខ្មែរទៅជាអត្ថបទ។",
       tags: ["Speech recognition", "Khmer"],
       team: [], status: "", year: "", details: "", owner: "", link: "",
     },
@@ -141,6 +163,8 @@ window.SWG = {
       name: "Global Search",
       platform: "Chaktomuk (CTM)",
       summary: "Search for the Chaktomuk (CTM) platform. OCR reads the Khmer text in documents and images so it can be searched.",
+      name_km: "ការស្វែងរករួម (Global Search)",
+      summary_km: "មុខងារស្វែងរកសម្រាប់ប្រព័ន្ធ Chaktomuk (CTM)។ OCR អានអក្សរខ្មែរក្នុងឯកសារ និងរូបភាព ដើម្បីឱ្យអាចស្វែងរកបាន។",
       tags: ["OCR", "Search", "Khmer"],
       team: [], status: "", year: "", details: "", owner: "", link: "",
     },
@@ -149,6 +173,8 @@ window.SWG = {
       name: "Student Face Attendance",
       platform: "University Management System (UMS)",
       summary: "Students are marked present by face in the University Management System (UMS).",
+      name_km: "កត់វត្តមាននិស្សិតដោយស្កេនមុខ",
+      summary_km: "និស្សិតត្រូវបានកត់វត្តមានដោយការស្កេនមុខ ក្នុងប្រព័ន្ធគ្រប់គ្រងសាកលវិទ្យាល័យ (UMS)។",
       tags: ["Face recognition"],
       team: [], status: "", year: "", details: "", owner: "", link: "",
     },
