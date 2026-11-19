@@ -1,0 +1,176 @@
+/* Khmer Digital — MPTC, SIL Open Font License 1.1 (see assets/fonts/OFL.txt) */
+@font-face {
+  font-family: "Khmer Digital";
+  src: url("../fonts/KhmerDigital-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Khmer Digital";
+  src: url("../fonts/KhmerDigital-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Khmer Digital";
+  src: url("../fonts/KhmerDigital-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0a0e0b;
+  --panel: #0f1511;
+  --line: #1e2b22;
+  --fg: #c7d5cb;
+  --dim: #71857a;
+  --accent: #3ee07f;
+  --accent-2: #f5b942;
+  --link: #62c9ff;
+  --err: #ff6f6f;
+  --glow: rgba(62, 224, 127, 0.18);
+  /* Latin renders in the monospace face; Khmer falls through to Khmer Digital */
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", "Cascadia Mono", Menlo, Consolas,
+    "Liberation Mono", "DejaVu Sans Mono", "Khmer Digital", monospace;
+  --khmer: "Khmer Digital", "Khmer OS Battambang", "Noto Sans Khmer", sans-serif;
+}
+[data-theme="amber"] {
+  --bg: #0f0b05; --panel: #161008; --line: #2e2212; --fg: #e2cfa8; --dim: #8d7a55;
+  --accent: #ffb62e; --accent-2: #ff7a45; --link: #ffd98a; --glow: rgba(255, 182, 46, 0.18);
+}
+[data-theme="ice"] {
+  --bg: #080c12; --panel: #0d131c; --line: #1b2636; --fg: #c5d2e2; --dim: #6c7d93;
+  --accent: #5cc8ff; --accent-2: #b392f0; --link: #7ee0c3; --glow: rgba(92, 200, 255, 0.18);
+}
+[data-theme="paper"] {
+  --bg: #f6f4ee; --panel: #ece9e0; --line: #d5d0c2; --fg: #2b2f2c; --dim: #71756f;
+  --accent: #14773f; --accent-2: #a85d00; --link: #0b5fa8; --err: #b3261e; --glow: transparent;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.7 var(--mono);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--accent); color: var(--bg); }
+a { color: var(--link); text-decoration: none; border-bottom: 1px dashed currentColor; }
+a:hover, a:focus-visible { color: var(--accent); }
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+[lang="km"], .km { font-family: var(--khmer); line-height: 1.9; }
+
+.term { max-width: 1000px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* ── title bar + section tabs ─────────────────────────── */
+.bar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar-top { display: flex; align-items: center; gap: 12px; padding: 9px 16px 6px; }
+.dots { display: inline-flex; gap: 7px; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+.dots i:nth-child(2) { background: #febc2e; }
+.dots i:nth-child(3) { background: #28c840; }
+.bar-title { flex: 1; text-align: center; color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-org { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; }
+.tabs { display: flex; gap: 2px; padding: 0 10px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button {
+  font: inherit; font-size: 13px; color: var(--dim); background: none; border: 0;
+  border-bottom: 2px solid transparent; padding: 6px 10px 7px; cursor: pointer; white-space: nowrap;
+}
+.tabs button::before { content: "./"; opacity: 0.55; }
+.tabs button:hover, .tabs button:focus-visible { color: var(--fg); }
+.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── screen ───────────────────────────────────────────── */
+.screen { flex: 1; padding: 18px 16px 40vh; cursor: text; }
+.entry { scroll-margin-top: 92px; margin-bottom: 18px; }
+.echo { display: flex; flex-wrap: wrap; gap: 0 8px; }
+.echo .typed { color: var(--fg); font-weight: 600; word-break: break-word; }
+.ps1 { color: var(--accent); white-space: nowrap; user-select: none; }
+.ps1 .path { color: var(--link); }
+.ps1 .sep { color: var(--dim); }
+.outp { margin-top: 6px; }
+.outp p { margin: 0 0 10px; max-width: 78ch; }
+.dim { color: var(--dim); }
+.err { color: var(--err); }
+.ok { color: var(--accent); }
+.kbd { color: var(--accent); cursor: pointer; border: 0; background: none; font: inherit; padding: 0; border-bottom: 1px dashed currentColor; }
+.kbd:hover { color: var(--accent-2); }
+
+.prompt { display: flex; align-items: baseline; gap: 8px; }
+.prompt input {
+  flex: 1; min-width: 0; font: inherit; font-weight: 600; color: var(--fg); background: none; border: 0; outline: 0;
+  padding: 0; caret-color: var(--accent); caret-shape: block;
+}
+.prompt.busy { visibility: hidden; }
+
+/* ── banner ───────────────────────────────────────────── */
+.banner {
+  margin: 4px 0 12px; color: var(--accent); font: inherit; line-height: 1.12; overflow: hidden;
+  font-size: clamp(5px, 2.15vw, 15px); text-shadow: 0 0 14px var(--glow);
+}
+.banner-meta { margin: 0 0 4px; }
+.banner-meta .km { display: block; color: var(--fg); font-size: 16px; font-weight: 500; }
+.banner-meta .org { color: var(--dim); }
+.tagline { color: var(--accent-2); }
+
+/* ── section output ───────────────────────────────────── */
+.h { margin: 2px 0 10px; font-size: inherit; font-weight: 700; color: var(--accent); display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.h::before { content: "##"; color: var(--dim); font-weight: 400; }
+.h .km { color: var(--dim); font-weight: 400; }
+.sub { margin: 16px 0 8px; color: var(--dim); font-weight: 400; font-size: inherit; }
+.sub::before { content: "── "; }
+
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 18px; margin: 0 0 10px; }
+.kv dt { color: var(--accent-2); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.card { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; border-radius: 3px; min-width: 0; }
+.card:hover { border-color: var(--accent); }
+.card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.avatar {
+  flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--accent);
+  color: var(--accent); font-weight: 700; border-radius: 3px;
+}
+.card .name { font-weight: 700; color: var(--fg); line-height: 1.35; }
+.card .name .km { display: block; font-weight: 400; color: var(--dim); font-size: 13px; }
+.card .role { color: var(--accent-2); font-size: 13px; }
+.card .meta { color: var(--dim); font-size: 13px; overflow-wrap: anywhere; }
+
+.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.proj { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; }
+.proj:hover { border-left-color: var(--accent); }
+.proj-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.proj-name { font-weight: 700; color: var(--fg); }
+.proj p { margin: 2px 0; }
+.tag { font-size: 12px; white-space: nowrap; }
+.tag.active { color: var(--accent); }
+.tag.planned { color: var(--accent-2); }
+.tag.done { color: var(--dim); }
+.stack { color: var(--dim); font-size: 13px; }
+
+.help { display: grid; grid-template-columns: max-content 1fr; gap: 2px 20px; margin: 0; }
+.help dt { margin: 0; }
+.help dd { margin: 0; color: var(--dim); }
+
+.cursor { display: inline-block; width: 0.6em; height: 1.1em; background: var(--accent); vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+@media (max-width: 560px) {
+  body { font-size: 13px; }
+  .ps1 .long { display: none; }
+  .screen { padding-inline: 12px; }
+  .kv, .help { grid-template-columns: 1fr; }
+  .kv dd, .help dd { margin-bottom: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .cursor { animation: none; }
+}
+@media (max-width: 420px) {
+  .tabs { padding: 0 4px; }
+  .tabs button { padding-inline: 7px; }
+}

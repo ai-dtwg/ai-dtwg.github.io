@@ -1,0 +1,354 @@
+(() => {
+  "use strict";
+
+  const D = window.SWG;
+  const $ = (s) => document.querySelector(s);
+  const out = $("#out");
+  const form = $("#prompt");
+  const input = $("#cmd");
+  const screen = $("#screen");
+  const tabs = [...document.querySelectorAll(".tabs button")];
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const THEMES = ["green", "amber", "ice", "paper"];
+  const history = [];
+  let histPos = 0;
+  let busy = false;
+
+  /* ── tiny DOM helpers (all content goes in as text nodes, never innerHTML) ── */
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v;
+      else el.setAttribute(k, v);
+    }
+    for (const kid of kids.flat(Infinity)) {
+      if (kid == null || kid === false || kid === "") continue;
+      el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    }
+    return el;
+  }
+
+  function link(href, label) {
+    if (!/^(https?:|mailto:|tel:)/i.test(href || "")) return document.createTextNode(label || href || "");
+    const ext = /^https?:/i.test(href);
+    return h("a", { href, target: ext ? "_blank" : null, rel: ext ? "noopener noreferrer" : null }, label || href);
+  }
+
+  // A clickable command, e.g. cmd("team") → runs `team` when clicked.
+  const cmd = (text) => h("button", { type: "button", class: "kbd", "data-cmd": text }, text);
+
+  const heading = (title, km) => h("h2", { class: "h" }, title, km && h("span", { class: "km", lang: "km" }, km));
+
+  function ps1() {
+    return h("span", { class: "ps1" },
+      h("span", { class: "long" }, "guest@" + D.group.host, h("span", { class: "sep" }, ":")),
+      h("span", { class: "path" }, "~"), h("span", { class: "sep" }, "$"));
+  }
+
+  /* ── banner ── */
+  const GLYPHS = {
+    A: [" ███ ", "█   █", "█████", "█   █", "█   █"],
+    B: ["████ ", "█   █", "████ ", "█   █", "████ "],
+    D: ["████ ", "█   █", "█   █", "█   █", "████ "],
+    G: [" ████", "█    ", "█  ██", "█   █", " ████"],
+    I: ["███", " █ ", " █ ", " █ ", "███"],
+    T: ["█████", "  █  ", "  █  ", "  █  ", "  █  "],
+    "&": [" ██  ", "█  █ ", " ██ █", "█  █ ", " ██ █"],
+    " ": ["  ", "  ", "  ", "  ", "  "],
+  };
+  function bigText(text) {
+    const chars = [...text.toUpperCase()].map((c) => GLYPHS[c]).filter(Boolean);
+    return [0, 1, 2, 3, 4].map((row) => chars.map((g) => g[row]).join(" ")).join("\n");
+  }
+
+  /* ── commands ── */
+  const commands = {
+    help: {
+      desc: "list available commands",
+      run: () => h("dl", { class: "help" },
+        Object.entries(commands).filter(([, c]) => !c.hidden).map(([name, c]) => [
+          h("dt", null, cmd(name), c.usage ? h("span", { class: "dim" }, " " + c.usage) : null),
+          h("dd", null, c.desc),
+        ]),
+        h("dt", { class: "dim" }, "↑ / ↓ · Tab"), h("dd", null, "command history · auto-complete")),
+    },
+
+    about: {
+      desc: "who we are and what we do",
+      run: () => [
+        heading("about", "អំពីយើង"),
+        D.group.about.map((p) => h("p", null, p)),
+        h("h3", { class: "sub" }, "focus areas"),
+        h("dl", { class: "kv" }, D.focus.map((f) => [h("dt", null, f.title), h("dd", null, f.desc)])),
+        h("p", { class: "dim" },
+          D.team.length + " members · " + D.projects.length + " projects — try ", cmd("team"), " or ", cmd("projects")),
+      ],
+    },
+
+    team: {
+      desc: "leads and members of the group",
+      run: () => {
+        const card = (m) => h("li", { class: "card" },
+          h("div", { class: "card-head" },
+            h("span", { class: "avatar", "aria-hidden": "true" }, initials(m.name)),
+            h("div", null,
+              h("div", { class: "name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
+              h("div", { class: "role" }, m.role))),
+          m.focus && h("div", { class: "meta" }, "focus: " + m.focus),
+          m.github && h("div", { class: "meta" }, link("https://github.com/" + m.github, "@" + m.github)),
+          m.email && h("div", { class: "meta" }, link("mailto:" + m.email, m.email)));
+        const leads = D.team.filter((m) => m.group === "lead");
+        const members = D.team.filter((m) => m.group !== "lead");
+        return [
+          heading("team", "សមាជិកក្រុម"),
+          leads.length ? [h("h3", { class: "sub" }, "leads (" + leads.length + ")"), h("ul", { class: "grid" }, leads.map(card))] : null,
+          members.length ? [h("h3", { class: "sub" }, "members (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
+        ];
+      },
+    },
+
+    projects: {
+      desc: "what we are building",
+      run: () => [
+        heading("projects", "គម្រោង"),
+        h("ul", { class: "plist" }, D.projects.map((p) => h("li", { class: "proj" },
+          h("div", { class: "proj-head" },
+            h("span", { class: "proj-name" }, p.name),
+            h("span", { class: "tag " + p.status }, "[" + p.status + "]"),
+            p.year && h("span", { class: "dim" }, p.year)),
+          h("p", null, p.summary),
+          h("p", { class: "stack" }, (p.stack || []).join(" · "), "  → ", cmd("project " + p.id))))),
+      ],
+    },
+
+    project: {
+      desc: "details of one project",
+      usage: "<id>",
+      complete: () => D.projects.map((p) => p.id),
+      run: (args) => {
+        const p = D.projects.find((x) => x.id === (args[0] || "").toLowerCase());
+        if (!p) {
+          return h("p", { class: args[0] ? "err" : null },
+            args[0] ? "project: no such project: " + args[0] + " — " : "usage: project <id> — ",
+            "available: ", D.projects.map((x, i) => [i ? ", " : "", cmd("project " + x.id)]));
+        }
+        return [
+          heading(p.name),
+          h("dl", { class: "kv" },
+            h("dt", null, "status"), h("dd", null, h("span", { class: "tag " + p.status }, "[" + p.status + "]"), p.year ? " " + p.year : ""),
+            h("dt", null, "summary"), h("dd", null, p.summary),
+            p.details && [h("dt", null, "details"), h("dd", null, p.details)],
+            p.stack && p.stack.length ? [h("dt", null, "stack"), h("dd", null, p.stack.join(" · "))] : null,
+            p.owner && [h("dt", null, "owner"), h("dd", null, p.owner)],
+            p.link && [h("dt", null, "link"), h("dd", null, link(p.link))]),
+        ];
+      },
+    },
+
+    contact: {
+      desc: "how to reach us",
+      run: () => {
+        const c = D.contact;
+        const rows = [
+          c.email && ["email", link("mailto:" + c.email, c.email)],
+          c.github && ["github", link(c.github, c.github.replace(/^https?:\/\//, ""))],
+          c.telegram && ["telegram", link(c.telegram, c.telegram.replace(/^https?:\/\//, ""))],
+          c.website && ["website", link(c.website, c.website.replace(/^https?:\/\//, ""))],
+          c.address && ["address", c.address],
+        ].filter(Boolean);
+        return [
+          heading("contact", "ទំនាក់ទំនង"),
+          rows.length
+            ? h("dl", { class: "kv" }, rows.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))
+            : h("p", { class: "dim" }, "No contact details published yet."),
+        ];
+      },
+    },
+
+    all: {
+      desc: "print every section",
+      run: () => ["about", "team", "projects", "contact"].map((n) => h("div", { class: "entry" }, commands[n].run([]))),
+    },
+
+    banner: {
+      desc: "show the welcome banner",
+      run: () => [
+        h("pre", { class: "banner", role: "img", "aria-label": D.group.name }, bigText(D.group.name)),
+        h("p", { class: "banner-meta" },
+          h("span", { class: "km", lang: "km" }, D.group.km),
+          h("span", { class: "org" }, D.group.kind + " · " + D.org.name + " (" + D.org.short + ")")),
+        h("p", { class: "tagline" }, "> " + D.group.tagline),
+      ],
+    },
+
+    theme: {
+      desc: "switch color theme",
+      usage: "[" + THEMES.join("|") + "]",
+      complete: () => THEMES,
+      run: (args) => {
+        const cur = document.documentElement.dataset.theme;
+        const next = args[0] ? args[0].toLowerCase() : THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+        if (!THEMES.includes(next)) return h("p", { class: "err" }, "theme: unknown theme '" + args[0] + "' — choose " + THEMES.join(", "));
+        setTheme(next);
+        try { localStorage.setItem("theme", next); } catch (e) { /* storage unavailable */ }
+        return h("p", null, "theme → ", h("span", { class: "ok" }, next));
+      },
+    },
+
+    clear: { desc: "clear the screen", run: () => { out.replaceChildren(); return null; } },
+
+    // small extras, not listed in help
+    ls: { hidden: true, run: () => h("p", null, ["about", "team", "projects", "contact"].map((n, i) => [i ? "   " : "", cmd(n)])) },
+    cat: {
+      hidden: true,
+      complete: () => ["about", "team", "projects", "contact"],
+      run: (args) => {
+        const name = (args[0] || "").replace(/\.\w+$|\/$/, "");
+        return ["about", "team", "projects", "contact"].includes(name)
+          ? commands[name].run([])
+          : h("p", { class: "err" }, "cat: " + (args[0] || "") + ": No such file or directory");
+      },
+    },
+    whoami: { hidden: true, run: () => h("p", null, "guest — visitor of the " + D.group.name + " " + D.group.kind) },
+    date: { hidden: true, run: () => h("p", null, new Date().toString()) },
+    echo: { hidden: true, run: (args) => h("p", null, args.join(" ")) },
+    history: { hidden: true, run: () => h("p", null, history.map((c, i) => [String(i + 1).padStart(3) + "  " + c, h("br")])) },
+    sudo: { hidden: true, run: () => h("p", { class: "err" }, "guest is not in the sudoers file. This incident will be reported.") },
+  };
+  commands.members = { hidden: true, run: commands.team.run };
+  commands.home = { hidden: true, run: commands.banner.run };
+
+  function initials(name) {
+    const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w));
+    return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+  }
+
+  function setTheme(name) {
+    document.documentElement.dataset.theme = name;
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", bg);
+  }
+
+  /* ── execution ── */
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  async function run(line, opts = {}) {
+    line = line.trim();
+    const typed = h("span", { class: "typed" });
+    const entry = h("div", { class: "entry" }, h("div", { class: "echo" }, ps1(), typed));
+    out.append(entry);
+
+    if (opts.animate && !reduceMotion) {
+      for (const ch of line) { typed.textContent += ch; await sleep(28); }
+      await sleep(120);
+    } else {
+      typed.textContent = line;
+    }
+    if (!line) return;
+
+    const [name, ...args] = line.split(/\s+/);
+    const c = Object.prototype.hasOwnProperty.call(commands, name.toLowerCase()) ? commands[name.toLowerCase()] : null;
+    let result;
+    try {
+      result = c ? c.run(args) : h("p", { class: "err" }, name + ": command not found — type ", cmd("help"));
+    } catch (e) {
+      result = h("p", { class: "err" }, name + ": " + e.message);
+    }
+    if (name.toLowerCase() === "clear") return;
+    if (result) entry.append(h("div", { class: "outp" }, result));
+
+    tabs.forEach((t) => t.classList.toggle("on", t.dataset.cmd === name.toLowerCase()));
+    if (opts.scroll !== false) entry.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  async function submit(line, opts) {
+    if (busy) return;
+    busy = true;
+    form.classList.add("busy");
+    if (line.trim() && history[history.length - 1] !== line.trim()) history.push(line.trim());
+    histPos = history.length;
+    await run(line, opts);
+    form.classList.remove("busy");
+    busy = false;
+  }
+
+  function complete() {
+    const value = input.value.replace(/^\s+/, "");
+    const parts = value.split(/\s+/);
+    let pool, prefix;
+    if (parts.length === 1) {
+      pool = Object.keys(commands).filter((n) => !commands[n].hidden || n.startsWith(parts[0]) && parts[0]);
+      prefix = "";
+    } else {
+      const c = commands[parts[0].toLowerCase()];
+      pool = c && c.complete ? c.complete() : [];
+      prefix = parts[0] + " ";
+    }
+    const word = parts[parts.length - 1].toLowerCase();
+    const hits = pool.filter((n) => n.startsWith(word));
+    if (hits.length === 1) {
+      input.value = prefix + hits[0] + (parts.length === 1 && commands[hits[0]].usage ? " " : "");
+    } else if (hits.length > 1) {
+      let common = hits[0];
+      for (const hit of hits) while (!hit.startsWith(common)) common = common.slice(0, -1);
+      input.value = prefix + common;
+    }
+  }
+
+  /* ── events ── */
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const line = input.value;
+    input.value = "";
+    submit(line);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      histPos = Math.max(0, Math.min(history.length, histPos + (e.key === "ArrowUp" ? -1 : 1)));
+      input.value = history[histPos] || "";
+    } else if (e.key === "Tab" && input.value.trim()) {
+      e.preventDefault();
+      complete();
+    } else if (e.key === "l" && e.ctrlKey) {
+      e.preventDefault();
+      out.replaceChildren();
+    }
+  });
+
+  // Clickable commands (tabs and inline links) — typed out as if the visitor ran them.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-cmd]");
+    if (btn) { submit(btn.dataset.cmd, { animate: true }); return; }
+    // Clicking empty terminal space focuses the prompt, without breaking text selection or links.
+    if (screen.contains(e.target) && !e.target.closest("a, button, input") && !String(getSelection())) {
+      input.focus({ preventScroll: true });
+    }
+  });
+
+  /* ── boot ── */
+  (async function boot() {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) { /* storage unavailable */ }
+    if (THEMES.includes(saved)) setTheme(saved);
+
+    form.querySelector("#ps1").replaceWith(Object.assign(ps1(), { id: "ps1" }));
+    $("#bar-title").textContent = "guest@" + D.group.host + ": ~";
+
+    busy = true;
+    form.classList.add("busy");
+    await run("banner", { animate: true, scroll: false });
+    await run("about", { animate: true, scroll: false });
+    out.append(h("p", { class: "dim" }, "Type ", cmd("help"), " for commands, or use the tabs above."));
+    form.classList.remove("busy");
+    busy = false;
+
+    const target = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    if (/^[a-z]+$/.test(target) && Object.prototype.hasOwnProperty.call(commands, target) && target !== "clear") {
+      await submit(target, { animate: true });
+    }
+    if (matchMedia("(pointer: fine)").matches) input.focus({ preventScroll: true });
+  })();
+})();
