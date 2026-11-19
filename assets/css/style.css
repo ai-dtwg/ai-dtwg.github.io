@@ -200,6 +200,8 @@ html.modal-open { overflow: hidden; }
 .proj-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
 .proj-name { font-weight: 700; color: var(--fg); }
 .proj p { margin: 2px 0; }
+.proj-for { color: var(--accent-2); font-size: 13px; }
+.proj .tags { margin: 6px 0 4px; }
 .tag { font-size: 12px; white-space: nowrap; }
 .tag.active { color: var(--accent); }
 .tag.planned { color: var(--accent-2); }

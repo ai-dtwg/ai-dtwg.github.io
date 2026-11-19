@@ -107,42 +107,44 @@ window.SWG = {
     { id: "intern", name: "Intern", km: "", role: "", group: "intern", bio: "", expertise: [], website: "", github: "", email: "" },
   ],
 
-  // TODO: replace with the real projects.
-  //   status: "active" | "planned" | "done"
-  //   id:     short slug, used by the `project <id>` command
+  // Projects.
+  //   id:       short slug, used by the `project <id>` command
+  //   platform: the product or system the work is for
+  //   tags:     short labels for the kind of work
+  //   status:   "active" | "planned" | "done" (optional)   year: optional
+  //   details, owner, link: optional, shown by `project <id>`
   projects: [
     {
-      id: "sample-ai",
-      name: "Sample AI Project",
-      status: "active",
-      year: "2026",
-      summary: "Placeholder. One line on what this AI project does.",
-      details: "Placeholder. Goals, scope and where the project stands now.",
-      stack: ["Python", "PyTorch"],
-      owner: "",
-      link: "",
+      id: "face-checkin",
+      name: "Face Check-in",
+      platform: "EventKH",
+      summary: "Attendees check in to events on EventKH with their face.",
+      tags: ["Face recognition"],
+      status: "", year: "", details: "", owner: "", link: "",
     },
     {
-      id: "sample-data",
-      name: "Sample Big Data Project",
-      status: "planned",
-      year: "2026",
-      summary: "Placeholder. One line on what this data project does.",
-      details: "Placeholder. Goals, scope and where the project stands now.",
-      stack: ["Spark", "Airflow", "PostgreSQL"],
-      owner: "",
-      link: "",
+      id: "khmer-asr",
+      name: "Khmer ASR",
+      platform: "Chaktomuk (CTM)",
+      summary: "Khmer speech recognition for the Chaktomuk (CTM) platform. It turns spoken Khmer into text.",
+      tags: ["Speech recognition", "Khmer"],
+      status: "", year: "", details: "", owner: "", link: "",
     },
     {
-      id: "sample-dashboard",
-      name: "Sample Dashboard",
-      status: "done",
-      year: "2025",
-      summary: "Placeholder. One line on what this dashboard shows.",
-      details: "Placeholder. Goals, scope and what came out of it.",
-      stack: ["dbt", "Superset"],
-      owner: "",
-      link: "",
+      id: "global-search",
+      name: "Global Search",
+      platform: "Chaktomuk (CTM)",
+      summary: "Search for the Chaktomuk (CTM) platform. OCR reads the Khmer text in documents and images so it can be searched.",
+      tags: ["OCR", "Search", "Khmer"],
+      status: "", year: "", details: "", owner: "", link: "",
+    },
+    {
+      id: "face-attendance",
+      name: "Student Face Attendance",
+      platform: "University Management System (UMS)",
+      summary: "Students are marked present by face in the University Management System (UMS).",
+      tags: ["Face recognition"],
+      status: "", year: "", details: "", owner: "", link: "",
     },
   ],
 

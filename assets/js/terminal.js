@@ -137,10 +137,11 @@
         h("ul", { class: "plist" }, D.projects.map((p) => h("li", { class: "proj" },
           h("div", { class: "proj-head" },
             h("span", { class: "proj-name" }, p.name),
-            h("span", { class: "tag " + p.status }, "[" + p.status + "]"),
+            p.platform && h("span", { class: "proj-for" }, "for " + p.platform),
+            p.status && h("span", { class: "tag " + p.status }, "[" + p.status + "]"),
             p.year && h("span", { class: "dim" }, p.year)),
           h("p", null, p.summary),
-          h("p", { class: "stack" }, (p.stack || []).join(" · "), "  → ", cmd("project " + p.id))))),
+          tags(p.tags, "Type of work")))),
       ],
     },
 
@@ -158,10 +159,12 @@
         return [
           heading(p.name),
           h("dl", { class: "kv" },
-            h("dt", null, "status"), h("dd", null, h("span", { class: "tag " + p.status }, "[" + p.status + "]"), p.year ? " " + p.year : ""),
+            p.platform && [h("dt", null, "platform"), h("dd", null, p.platform)],
+            p.status && [h("dt", null, "status"), h("dd", null, h("span", { class: "tag " + p.status }, "[" + p.status + "]"))],
+            p.year && [h("dt", null, "year"), h("dd", null, p.year)],
             h("dt", null, "summary"), h("dd", null, p.summary),
             p.details && [h("dt", null, "details"), h("dd", null, p.details)],
-            p.stack && p.stack.length ? [h("dt", null, "stack"), h("dd", null, p.stack.join(" · "))] : null,
+            p.tags && p.tags.length ? [h("dt", null, "type"), h("dd", null, p.tags.join(", "))] : null,
             p.owner && [h("dt", null, "owner"), h("dd", null, p.owner)],
             p.link && [h("dt", null, "link"), h("dd", null, link(p.link))]),
         ];
@@ -295,7 +298,7 @@
     ];
   }
 
-  const tags = (list) => (list && list.length ? h("ul", { class: "tags", "aria-label": "Expertise" }, list.map((t) => h("li", null, t))) : null);
+  const tags = (list, label) => (list && list.length ? h("ul", { class: "tags", "aria-label": label || "Expertise" }, list.map((t) => h("li", null, t))) : null);
 
   function initials(name) {
     const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w) && !w.endsWith("."));
