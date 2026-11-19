@@ -157,7 +157,7 @@ a:hover, a:focus-visible { color: var(--accent); }
 .tags { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tags li { font-size: 12px; line-height: 1.5; color: var(--accent); border: 1px solid var(--line); padding: 1px 7px; border-radius: 2px; }
 
-.card[data-cmd] { cursor: pointer; }
+.card[data-member] { cursor: pointer; }
 .card .more { margin-top: 2px; }
 .card .more .kbd::before { content: "→ "; }
 .tip { margin-top: 12px; }
@@ -171,6 +171,28 @@ a:hover, a:focus-visible { color: var(--accent); }
 .rows .row-title { color: var(--fg); font-weight: 600; }
 .rows .row-years { color: var(--dim); font-size: 13px; white-space: nowrap; grid-column: 2; grid-row: 1; }
 .rows .row-place { color: var(--dim); font-size: 13px; grid-column: 1 / -1; }
+
+/* ── member popup ─────────────────────────────────────── */
+html.modal-open { overflow: hidden; }
+.modal {
+  width: min(700px, calc(100vw - 24px)); max-width: none; max-height: min(88vh, 860px); max-height: min(88dvh, 860px);
+  padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg);
+  overflow: hidden; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 50px -20px var(--accent);
+}
+.modal[open] { display: flex; flex-direction: column; }
+.modal::backdrop { background: rgba(0, 0, 0, 0.62); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.modal-bar { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.modal-count { color: var(--dim); font-size: 12px; white-space: nowrap; }
+.modal-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px 8px; }
+.modal-body > p { max-width: none; }
+.modal-nav { display: flex; justify-content: space-between; gap: 10px; padding: 10px; background: var(--panel); border-top: 1px solid var(--line); }
+.modal-nav button, .modal-close {
+  font: inherit; font-size: 13px; color: var(--accent); background: none; border: 1px solid var(--line); border-radius: 3px;
+  padding: 5px 12px; min-height: 34px; cursor: pointer; min-width: 0; display: inline-flex; align-items: center; white-space: pre;
+}
+.modal-close { color: var(--dim); font-size: 12px; padding: 2px 9px; min-height: 28px; }
+.modal-nav button:hover, .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+.modal-nav .who { overflow: hidden; text-overflow: ellipsis; }
 
 .plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .proj { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; }
@@ -235,6 +257,15 @@ a:hover, a:focus-visible { color: var(--accent); }
 [data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(7) { animation-delay: 360ms; }
 [data-fx="on"] :is(.outp, .kv, .help, .grid, .plist, .rows) > :nth-child(n + 8) { animation-delay: 420ms; }
 
+@keyframes modal-in { from { opacity: 0; transform: translateY(18px) scale(0.96); } }
+@keyframes slide-right { from { opacity: 0; transform: translateX(28px); } }
+@keyframes slide-left { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes fade-in { from { opacity: 0; } }
+[data-fx="on"] .modal[open] { animation: modal-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+[data-fx="on"] .modal[open]::backdrop { animation: fade-in 0.3s ease; }
+[data-fx="on"] .modal-body.from-right { animation: slide-right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+[data-fx="on"] .modal-body.from-left { animation: slide-left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
 /* banner wipes in, then a highlight sweeps across it */
 @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes shimmer { from { background-position: 130% 0; } to { background-position: -130% 0; } }
@@ -267,6 +298,9 @@ a:hover, a:focus-visible { color: var(--accent); }
   .card { padding: 10px 12px; }
   .outp p { max-width: none; }
   .rows li { grid-template-columns: 1fr; }
+  .modal { width: calc(100vw - 16px); max-height: 92vh; max-height: 92dvh; }
+  .modal-body { padding: 14px 14px 6px; }
+  .modal-nav button { flex: 1 1 0; justify-content: center; }
   .rows .row-years { grid-column: 1; grid-row: auto; }
 }
 @media (max-width: 700px) {
@@ -283,6 +317,8 @@ a:hover, a:focus-visible { color: var(--accent); }
   .prompt { min-height: 44px; align-items: center; }
   .prompt input { font-size: 16px; min-height: 44px; }
   .kbd { padding: 6px 2px; margin: -6px 0; }
+  .modal-nav button { min-height: 44px; }
+  .modal-close { min-height: 36px; padding-inline: 14px; }
   .card a, .kv a { display: inline-block; padding: 4px 0; }
   .entry { scroll-margin-top: 104px; }
 }

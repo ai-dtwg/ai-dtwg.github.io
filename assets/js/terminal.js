@@ -92,8 +92,8 @@
     team: {
       desc: "who is on the team",
       run: () => {
-        // The whole card is clickable and opens the member's details.
-        const card = (m) => h("li", { class: "card", "data-cmd": m.id ? "member " + m.id : null },
+        // The whole card is clickable and opens the member's profile in a popup.
+        const card = (m) => h("li", { class: "card", "data-member": m.id || null },
           h("div", { class: "card-head" },
             h("span", { class: "avatar", "aria-hidden": "true" }, initials(m.name)),
             h("div", null,
@@ -101,7 +101,7 @@
               m.role && h("div", { class: "role" }, m.role))),
           m.bio && h("p", { class: "bio" }, m.bio),
           tags(m.expertise),
-          m.id && h("div", { class: "meta more" }, cmd("member " + m.id)));
+          m.id && h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, "view profile")));
         const leads = D.team.filter((m) => m.group === "lead");
         const interns = D.team.filter((m) => m.group === "intern");
         const members = D.team.filter((m) => m.group !== "lead" && m.group !== "intern");
@@ -110,7 +110,7 @@
           leads.length ? [h("h3", { class: "sub" }, leads.length > 1 ? "leads (" + leads.length + ")" : "lead"), h("ul", { class: "grid" }, leads.map(card))] : null,
           members.length ? [h("h3", { class: "sub" }, "members (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
           interns.length ? [h("h3", { class: "sub" }, interns.length > 1 ? "interns (" + interns.length + ")" : "intern"), h("ul", { class: "grid" }, interns.map(card))] : null,
-          h("p", { class: "dim tip" }, "Click a card to see the full profile."),
+          h("p", { class: "dim tip" }, "Click a card to open the full profile."),
         ];
       },
     },
@@ -126,35 +126,7 @@
             args[0] ? "member: no such member: " + args[0] + ". " : "usage: member <id>. ",
             "Available: ", D.team.filter((x) => x.id).map((x, i) => [i ? ", " : "", cmd("member " + x.id)]));
         }
-        const rows = (items) => h("ul", { class: "rows" }, items.map((it) => h("li", null,
-          h("span", { class: "row-title" }, it.title),
-          it.place && h("span", { class: "row-place" }, it.place),
-          it.years && h("span", { class: "row-years" }, it.years))));
-        const section = (title, items) => (items && items.length ? [h("h3", { class: "sub" }, title), rows(items)] : null);
-        const links = [
-          m.website && ["website", link(m.website, bare(m.website))],
-          m.github && ["github", link("https://github.com/" + m.github, "@" + m.github)],
-          m.linkedin && ["linkedin", link(m.linkedin, bare(m.linkedin).replace(/^www\./, ""))],
-          m.scholar && ["scholar", link(m.scholar, "Google Scholar")],
-          m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
-          m.email && ["email", link("mailto:" + m.email, m.email)],
-        ].filter(Boolean);
-        const empty = !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
-        return [
-          h("div", { class: "profile" },
-            h("span", { class: "avatar big", "aria-hidden": "true" }, initials(m.name)),
-            h("div", null,
-              h("h2", { class: "profile-name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
-              m.role && h("div", { class: "role" }, m.role))),
-          m.bio && h("p", null, m.bio),
-          m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, "expertise"), tags(m.expertise)] : null,
-          section("experience", m.experience),
-          section("education", m.education),
-          section("selected work", m.work),
-          links.length ? [h("h3", { class: "sub" }, "links"), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
-          empty && h("p", { class: "dim" }, "No details added yet."),
-          h("p", { class: "dim" }, "Back to ", cmd("team"), "."),
-        ];
+        return [profile(m), h("p", { class: "dim" }, "Back to ", cmd("team"), ".")];
       },
     },
 
@@ -291,6 +263,38 @@
 
   const bare = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
+  // Full profile of one member. Used by the `member` command and by the popup.
+  function profile(m, titleId) {
+    const rows = (items) => h("ul", { class: "rows" }, items.map((it) => h("li", null,
+      h("span", { class: "row-title" }, it.title),
+      it.place && h("span", { class: "row-place" }, it.place),
+      it.years && h("span", { class: "row-years" }, it.years))));
+    const section = (title, items) => (items && items.length ? [h("h3", { class: "sub" }, title), rows(items)] : null);
+    const links = [
+      m.website && ["website", link(m.website, bare(m.website))],
+      m.github && ["github", link("https://github.com/" + m.github, "@" + m.github)],
+      m.linkedin && ["linkedin", link(m.linkedin, bare(m.linkedin).replace(/^www\./, ""))],
+      m.scholar && ["scholar", link(m.scholar, "Google Scholar")],
+      m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
+      m.email && ["email", link("mailto:" + m.email, m.email)],
+    ].filter(Boolean);
+    const empty = !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
+    return [
+      h("div", { class: "profile" },
+        h("span", { class: "avatar big", "aria-hidden": "true" }, initials(m.name)),
+        h("div", null,
+          h("h2", { class: "profile-name", id: titleId || null }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
+          m.role && h("div", { class: "role" }, m.role))),
+      m.bio && h("p", null, m.bio),
+      m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, "expertise"), tags(m.expertise)] : null,
+      section("experience", m.experience),
+      section("education", m.education),
+      section("selected work", m.work),
+      links.length ? [h("h3", { class: "sub" }, "links"), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+      empty && h("p", { class: "dim" }, "No details added yet."),
+    ];
+  }
+
   const tags = (list) => (list && list.length ? h("ul", { class: "tags", "aria-label": "Expertise" }, list.map((t) => h("li", null, t))) : null);
 
   function initials(name) {
@@ -396,9 +400,11 @@
 
   // Clickable commands (tabs and inline links), typed out as if the visitor ran them.
   document.addEventListener("click", (e) => {
-    // Links inside a clickable card still behave as links, and selecting text does not trigger it.
-    const btn = e.target.closest("a") ? null : e.target.closest("[data-cmd]");
-    if (btn && !(btn.matches(".card") && String(getSelection()))) { submit(btn.dataset.cmd, { animate: true }); return; }
+    const btn = e.target.closest("[data-cmd]");
+    if (btn) { if (modal.open) modal.close(); submit(btn.dataset.cmd, { animate: true }); return; }
+    // A team card opens the member popup. Links inside it still work, and selecting text does not trigger it.
+    const person = e.target.closest("a") ? null : e.target.closest("[data-member]");
+    if (person && !String(getSelection())) { showMember(people.findIndex((m) => m.id === person.dataset.member)); return; }
     // Clicking empty terminal space focuses the prompt, without breaking text selection or links.
     if (screen.contains(e.target) && !e.target.closest("a, button, input") && !String(getSelection())) {
       input.focus({ preventScroll: true });
@@ -419,6 +425,56 @@
       if (card && !card.contains(e.relatedTarget)) { card.style.removeProperty("--rx"); card.style.removeProperty("--ry"); }
     });
   }
+
+  /* ── member popup ── */
+  const people = D.team.filter((m) => m.id);
+  const modal = h("dialog", { class: "modal", "aria-labelledby": "modal-name" });
+  document.body.append(modal);
+  let current = 0;
+
+  function showMember(index, dir, focus) {
+    current = (index + people.length) % people.length;
+    const m = people[current];
+    const prev = people[(current - 1 + people.length) % people.length];
+    const next = people[(current + 1) % people.length];
+    const many = people.length > 1;
+    modal.replaceChildren(
+      h("div", { class: "modal-bar" },
+        h("span", { class: "dots", "aria-hidden": "true" }, h("i"), h("i"), h("i")),
+        h("span", { class: "bar-title" }, "~/team/" + m.id),
+        h("span", { class: "modal-count" }, (current + 1) + " / " + people.length),
+        h("button", { type: "button", class: "modal-close", "data-modal": "close", "aria-label": "Close" }, "close")),
+      h("div", { class: "modal-body" + (dir ? " from-" + dir : "") }, profile(m, "modal-name")),
+      many && h("div", { class: "modal-nav" },
+        h("button", { type: "button", "data-modal": "prev", "aria-label": "Previous member: " + prev.name }, h("span", { "aria-hidden": "true" }, "← "), h("span", { class: "who" }, prev.name)),
+        h("button", { type: "button", "data-modal": "next", "aria-label": "Next member: " + next.name }, h("span", { class: "who" }, next.name), h("span", { "aria-hidden": "true" }, " →"))));
+    if (!modal.open) { modal.showModal(); root.classList.add("modal-open"); }
+    const target = modal.querySelector('[data-modal="' + (focus || "close") + '"]');
+    if (target) target.focus({ preventScroll: true });
+    emit("swg:cmd");
+  }
+
+  modal.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-modal]");
+    if (e.target === modal || (btn && btn.dataset.modal === "close")) modal.close();
+    else if (btn && btn.dataset.modal === "prev") showMember(current - 1, "left", "prev");
+    else if (btn && btn.dataset.modal === "next") showMember(current + 1, "right", "next");
+  });
+  modal.addEventListener("keydown", (e) => {
+    if (people.length < 2) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); showMember(current - 1, "left", "prev"); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); showMember(current + 1, "right", "next"); }
+  });
+  modal.addEventListener("close", () => root.classList.remove("modal-open"));
+  // Swipe left or right to move between members on touch screens.
+  let swipe = null;
+  modal.addEventListener("touchstart", (e) => { swipe = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+  modal.addEventListener("touchend", (e) => {
+    if (!swipe || people.length < 2) return;
+    const dx = e.changedTouches[0].clientX - swipe.x, dy = e.changedTouches[0].clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) showMember(current + (dx < 0 ? 1 : -1), dx < 0 ? "right" : "left");
+  }, { passive: true });
 
   /* ── boot ── */
   (async function boot() {
