@@ -1,8 +1,8 @@
-# AI & Big Data — DTWG Sub Working Group
+# AI & Big Data, DTWG Sub Working Group
 
 Terminal-themed portfolio of the **AI & Big Data Sub Working Group** of the Digital Transformation Working Group (DTWG).
 
-Plain HTML, CSS and JavaScript — no build step and no external dependencies.
+Plain HTML, CSS and JavaScript. No build step, no external dependencies.
 
 ## Edit the content
 

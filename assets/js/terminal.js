@@ -65,29 +65,29 @@
   /* ── commands ── */
   const commands = {
     help: {
-      desc: "list available commands",
+      desc: "list commands",
       run: () => h("dl", { class: "help" },
         Object.entries(commands).filter(([, c]) => !c.hidden).map(([name, c]) => [
           h("dt", null, cmd(name), c.usage ? h("span", { class: "dim" }, " " + c.usage) : null),
           h("dd", null, c.desc),
         ]),
-        h("dt", { class: "dim" }, "↑ / ↓ · Tab"), h("dd", null, "command history · auto-complete")),
+        h("dt", { class: "dim" }, "↑ / ↓ · Tab"), h("dd", null, "history, auto-complete")),
     },
 
     about: {
-      desc: "who we are and what we do",
+      desc: "about the group",
       run: () => [
         heading("about", "អំពីយើង"),
         D.group.about.map((p) => h("p", null, p)),
-        h("h3", { class: "sub" }, "focus areas"),
+        h("h3", { class: "sub" }, "what we work on"),
         h("dl", { class: "kv" }, D.focus.map((f) => [h("dt", null, f.title), h("dd", null, f.desc)])),
         h("p", { class: "dim" },
-          D.team.length + " members · " + D.projects.length + " projects — try ", cmd("team"), " or ", cmd("projects")),
+          D.team.length + " members, " + D.projects.length + " projects. See ", cmd("team"), " or ", cmd("projects"), "."),
       ],
     },
 
     team: {
-      desc: "leads and members of the group",
+      desc: "who is on the team",
       run: () => {
         const card = (m) => h("li", { class: "card" },
           h("div", { class: "card-head" },
@@ -96,20 +96,21 @@
               h("div", { class: "name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
               h("div", { class: "role" }, m.role))),
           m.focus && h("div", { class: "meta" }, "focus: " + m.focus),
+          m.website && h("div", { class: "meta" }, link(m.website, bare(m.website))),
           m.github && h("div", { class: "meta" }, link("https://github.com/" + m.github, "@" + m.github)),
           m.email && h("div", { class: "meta" }, link("mailto:" + m.email, m.email)));
         const leads = D.team.filter((m) => m.group === "lead");
         const members = D.team.filter((m) => m.group !== "lead");
         return [
           heading("team", "សមាជិកក្រុម"),
-          leads.length ? [h("h3", { class: "sub" }, "leads (" + leads.length + ")"), h("ul", { class: "grid" }, leads.map(card))] : null,
+          leads.length ? [h("h3", { class: "sub" }, leads.length > 1 ? "leads (" + leads.length + ")" : "lead"), h("ul", { class: "grid" }, leads.map(card))] : null,
           members.length ? [h("h3", { class: "sub" }, "members (" + members.length + ")"), h("ul", { class: "grid" }, members.map(card))] : null,
         ];
       },
     },
 
     projects: {
-      desc: "what we are building",
+      desc: "what we are working on",
       run: () => [
         heading("projects", "គម្រោង"),
         h("ul", { class: "plist" }, D.projects.map((p) => h("li", { class: "proj" },
@@ -123,15 +124,15 @@
     },
 
     project: {
-      desc: "details of one project",
+      desc: "show one project",
       usage: "<id>",
       complete: () => D.projects.map((p) => p.id),
       run: (args) => {
         const p = D.projects.find((x) => x.id === (args[0] || "").toLowerCase());
         if (!p) {
           return h("p", { class: args[0] ? "err" : null },
-            args[0] ? "project: no such project: " + args[0] + " — " : "usage: project <id> — ",
-            "available: ", D.projects.map((x, i) => [i ? ", " : "", cmd("project " + x.id)]));
+            args[0] ? "project: no such project: " + args[0] + ". " : "usage: project <id>. ",
+            "Available: ", D.projects.map((x, i) => [i ? ", " : "", cmd("project " + x.id)]));
         }
         return [
           heading(p.name),
@@ -147,32 +148,33 @@
     },
 
     contact: {
-      desc: "how to reach us",
+      desc: "contact details",
       run: () => {
         const c = D.contact;
         const rows = [
+          c.lead && ["lead", c.lead],
+          c.website && ["website", link(c.website, bare(c.website))],
           c.email && ["email", link("mailto:" + c.email, c.email)],
-          c.github && ["github", link(c.github, c.github.replace(/^https?:\/\//, ""))],
-          c.telegram && ["telegram", link(c.telegram, c.telegram.replace(/^https?:\/\//, ""))],
-          c.website && ["website", link(c.website, c.website.replace(/^https?:\/\//, ""))],
+          c.github && ["github", link(c.github, bare(c.github))],
+          c.telegram && ["telegram", link(c.telegram, bare(c.telegram))],
           c.address && ["address", c.address],
         ].filter(Boolean);
         return [
           heading("contact", "ទំនាក់ទំនង"),
           rows.length
             ? h("dl", { class: "kv" }, rows.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))
-            : h("p", { class: "dim" }, "No contact details published yet."),
+            : h("p", { class: "dim" }, "No contact details yet."),
         ];
       },
     },
 
     all: {
-      desc: "print every section",
+      desc: "show everything",
       run: () => ["about", "team", "projects", "contact"].map((n) => h("div", { class: "entry" }, commands[n].run([]))),
     },
 
     banner: {
-      desc: "show the welcome banner",
+      desc: "show the banner",
       run: () => [
         h("pre", { class: "banner", role: "img", "aria-label": D.group.name }, bigText(D.group.name)),
         h("p", { class: "banner-meta" },
@@ -183,13 +185,13 @@
     },
 
     theme: {
-      desc: "switch color theme",
+      desc: "change colors",
       usage: "[" + THEMES.join("|") + "]",
       complete: () => THEMES,
       run: (args) => {
         const cur = document.documentElement.dataset.theme;
         const next = args[0] ? args[0].toLowerCase() : THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
-        if (!THEMES.includes(next)) return h("p", { class: "err" }, "theme: unknown theme '" + args[0] + "' — choose " + THEMES.join(", "));
+        if (!THEMES.includes(next)) return h("p", { class: "err" }, "theme: unknown theme '" + args[0] + "'. Choose one of: " + THEMES.join(", "));
         setTheme(next);
         try { localStorage.setItem("theme", next); } catch (e) { /* storage unavailable */ }
         return h("p", null, "theme → ", h("span", { class: "ok" }, next));
@@ -210,7 +212,7 @@
           : h("p", { class: "err" }, "cat: " + (args[0] || "") + ": No such file or directory");
       },
     },
-    whoami: { hidden: true, run: () => h("p", null, "guest — visitor of the " + D.group.name + " " + D.group.kind) },
+    whoami: { hidden: true, run: () => h("p", null, "guest") },
     date: { hidden: true, run: () => h("p", null, new Date().toString()) },
     echo: { hidden: true, run: (args) => h("p", null, args.join(" ")) },
     history: { hidden: true, run: () => h("p", null, history.map((c, i) => [String(i + 1).padStart(3) + "  " + c, h("br")])) },
@@ -218,6 +220,8 @@
   };
   commands.members = { hidden: true, run: commands.team.run };
   commands.home = { hidden: true, run: commands.banner.run };
+
+  const bare = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   function initials(name) {
     const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w));
@@ -251,7 +255,7 @@
     const c = Object.prototype.hasOwnProperty.call(commands, name.toLowerCase()) ? commands[name.toLowerCase()] : null;
     let result;
     try {
-      result = c ? c.run(args) : h("p", { class: "err" }, name + ": command not found — type ", cmd("help"));
+      result = c ? c.run(args) : h("p", { class: "err" }, name + ": command not found. Try ", cmd("help"), ".");
     } catch (e) {
       result = h("p", { class: "err" }, name + ": " + e.message);
     }
@@ -318,7 +322,7 @@
     }
   });
 
-  // Clickable commands (tabs and inline links) — typed out as if the visitor ran them.
+  // Clickable commands (tabs and inline links), typed out as if the visitor ran them.
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-cmd]");
     if (btn) { submit(btn.dataset.cmd, { animate: true }); return; }
@@ -341,7 +345,7 @@
     form.classList.add("busy");
     await run("banner", { animate: true, scroll: false });
     await run("about", { animate: true, scroll: false });
-    out.append(h("p", { class: "dim" }, "Type ", cmd("help"), " for commands, or use the tabs above."));
+    out.append(h("p", { class: "dim" }, "Type ", cmd("help"), " to see the commands, or tap a tab above."));
     form.classList.remove("busy");
     busy = false;
 

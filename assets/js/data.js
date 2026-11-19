@@ -1,8 +1,6 @@
 /*
- * ─────────────────────────────────────────────────────────────
- *  SITE CONTENT — edit this file only; no build step required.
- *  Everything marked "TODO" is placeholder content to replace.
- * ─────────────────────────────────────────────────────────────
+ * Site content. Edit this file only. There is no build step.
+ * Anything marked TODO is a placeholder to replace.
  */
 window.SWG = {
   org: {
@@ -16,33 +14,32 @@ window.SWG = {
     kind: "Sub Working Group",
     km: "អនុក្រុមការងារបញ្ញាសិប្បនិម្មិត និងទិន្នន័យធំ",
     host: "ai-bigdata", // shown in the prompt: guest@ai-bigdata:~$
-    tagline: "We build the AI and Big Data features behind digital transformation.",
-    // TODO: replace with your own introduction (one string per paragraph)
+    tagline: "The AI and Big Data team of DTWG.",
+    // One string per paragraph.
     about: [
-      "The AI & Big Data Sub Working Group is part of the Digital Transformation Working Group (DTWG). We are responsible for the AI and Big Data features of DTWG initiatives — from data platforms and pipelines to machine-learning models and the services that put them to use.",
-      "We work with the other sub working groups to turn data into reliable, practical and responsible digital services.",
+      "We are the AI & Big Data sub working group of the Digital Transformation Working Group (DTWG). Anything in DTWG that involves AI or Big Data comes to us.",
+      "This page shows who is on the team, what we are working on, and how to reach us.",
     ],
-    established: "TODO: year",
   },
 
-  // What the group is responsible for
+  // What the group works on
   focus: [
-    { key: "ai", title: "Artificial Intelligence", desc: "Machine learning, NLP and computer vision models, with a focus on Khmer language support." },
-    { key: "data", title: "Big Data", desc: "Data platforms, pipelines, storage and processing at scale." },
-    { key: "analytics", title: "Analytics", desc: "Dashboards, reporting and insight for evidence-based decisions." },
-    { key: "mlops", title: "MLOps & Governance", desc: "Deployment, monitoring, data quality, privacy and responsible AI." },
+    { key: "ai", title: "AI", desc: "Machine learning models, including Khmer language and vision." },
+    { key: "data", title: "Big Data", desc: "Collecting, storing and processing large datasets." },
+    { key: "analytics", title: "Analytics", desc: "Reports and dashboards built on that data." },
+    { key: "ops", title: "Operations", desc: "Running models and pipelines in production and keeping the data clean." },
   ],
 
-  // TODO: replace with the real team.
-  //   group:  "lead" | "member"
-  //   github: username only (optional)   email: optional   km: Khmer name (optional)
+  // TODO: replace the placeholder members.
+  //   group:   "lead" | "member"
+  //   website: full URL (optional)   github: username only (optional)
+  //   email:   optional              km: Khmer name (optional)
   team: [
-    { name: "Lead Name", km: "ឈ្មោះ", role: "Sub Working Group Lead", group: "lead", focus: "Strategy & coordination", github: "", email: "" },
-    { name: "Co-Lead Name", km: "", role: "Co-Lead / Technical Lead", group: "lead", focus: "Architecture", github: "", email: "" },
-    { name: "Member Name 01", km: "", role: "AI Engineer", group: "member", focus: "NLP", github: "", email: "" },
-    { name: "Member Name 02", km: "", role: "Data Engineer", group: "member", focus: "Data pipelines", github: "", email: "" },
-    { name: "Member Name 03", km: "", role: "Data Scientist", group: "member", focus: "Analytics", github: "", email: "" },
-    { name: "Member Name 04", km: "", role: "ML Engineer", group: "member", focus: "MLOps", github: "", email: "" },
+    { name: "KONG Vungsovanreach", km: "", role: "Lead, AI & Big Data", group: "lead", focus: "", website: "https://sovanreach.com", github: "", email: "" },
+    { name: "Member Name 01", km: "", role: "AI Engineer", group: "member", focus: "NLP", website: "", github: "", email: "" },
+    { name: "Member Name 02", km: "", role: "Data Engineer", group: "member", focus: "Data pipelines", website: "", github: "", email: "" },
+    { name: "Member Name 03", km: "", role: "Data Scientist", group: "member", focus: "Analytics", website: "", github: "", email: "" },
+    { name: "Member Name 04", km: "", role: "ML Engineer", group: "member", focus: "Deployment", website: "", github: "", email: "" },
   ],
 
   // TODO: replace with the real projects.
@@ -54,8 +51,8 @@ window.SWG = {
       name: "Sample AI Project",
       status: "active",
       year: "2026",
-      summary: "Placeholder — describe an AI feature the group is building.",
-      details: "Placeholder — add goals, scope, current progress and outcomes here.",
+      summary: "Placeholder. One line on what this AI project does.",
+      details: "Placeholder. Goals, scope and where the project stands now.",
       stack: ["Python", "PyTorch"],
       owner: "Member Name 01",
       link: "",
@@ -65,31 +62,32 @@ window.SWG = {
       name: "Sample Big Data Project",
       status: "planned",
       year: "2026",
-      summary: "Placeholder — describe a data platform or pipeline project.",
-      details: "Placeholder — add goals, scope, current progress and outcomes here.",
+      summary: "Placeholder. One line on what this data project does.",
+      details: "Placeholder. Goals, scope and where the project stands now.",
       stack: ["Spark", "Airflow", "PostgreSQL"],
       owner: "Member Name 02",
       link: "",
     },
     {
       id: "sample-dashboard",
-      name: "Sample Analytics Dashboard",
+      name: "Sample Dashboard",
       status: "done",
       year: "2025",
-      summary: "Placeholder — describe a finished analytics or reporting project.",
-      details: "Placeholder — add goals, scope, current progress and outcomes here.",
+      summary: "Placeholder. One line on what this dashboard shows.",
+      details: "Placeholder. Goals, scope and what came out of it.",
       stack: ["dbt", "Superset"],
       owner: "Member Name 03",
       link: "",
     },
   ],
 
-  // TODO: replace with real contact details. Empty values are hidden.
+  // TODO: add more contact details. Empty values are hidden.
   contact: {
+    lead: "KONG Vungsovanreach",
+    website: "https://sovanreach.com",
     email: "",
     github: "https://github.com/ai-dtwg",
     telegram: "",
-    website: "",
     address: "",
   },
 };
