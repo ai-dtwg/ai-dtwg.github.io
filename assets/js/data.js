@@ -112,7 +112,8 @@ window.SWG = {
   //   platform: the product or system the work is for
   //   tags:     short labels for the kind of work
   //   status:   "active" | "planned" | "done" (optional)   year: optional
-  //   details, owner, link: optional, shown by `project <id>`
+  //   details, owner, link: optional, shown when the project is opened
+  //   image:    path to a screenshot or diagram, e.g. "assets/img/projects/khmer-asr.png" (optional)
   projects: [
     {
       id: "face-checkin",

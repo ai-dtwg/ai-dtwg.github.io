@@ -93,7 +93,7 @@
       desc: "who is on the team",
       run: () => {
         // The whole card is clickable and opens the member's profile in a popup.
-        const card = (m) => h("li", { class: "card", "data-member": m.id || null },
+        const card = (m) => h("li", { class: "card", "data-open": m.id ? "member:" + m.id : null },
           h("div", { class: "card-head" },
             h("span", { class: "avatar", "aria-hidden": "true" }, initials(m.name)),
             h("div", null,
@@ -134,14 +134,16 @@
       desc: "what we are working on",
       run: () => [
         heading("projects", "គម្រោង"),
-        h("ul", { class: "plist" }, D.projects.map((p) => h("li", { class: "proj" },
+        h("ul", { class: "plist" }, D.projects.map((p) => h("li", { class: "proj", "data-open": "project:" + p.id },
           h("div", { class: "proj-head" },
             h("span", { class: "proj-name" }, p.name),
             p.platform && h("span", { class: "proj-for" }, "for " + p.platform),
             p.status && h("span", { class: "tag " + p.status }, "[" + p.status + "]"),
             p.year && h("span", { class: "dim" }, p.year)),
           h("p", null, p.summary),
-          tags(p.tags, "Type of work")))),
+          tags(p.tags, "Type of work"),
+          h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, "view project"))))),
+        h("p", { class: "dim tip" }, "Click a project to open it."),
       ],
     },
 
@@ -156,18 +158,7 @@
             args[0] ? "project: no such project: " + args[0] + ". " : "usage: project <id>. ",
             "Available: ", D.projects.map((x, i) => [i ? ", " : "", cmd("project " + x.id)]));
         }
-        return [
-          heading(p.name),
-          h("dl", { class: "kv" },
-            p.platform && [h("dt", null, "platform"), h("dd", null, p.platform)],
-            p.status && [h("dt", null, "status"), h("dd", null, h("span", { class: "tag " + p.status }, "[" + p.status + "]"))],
-            p.year && [h("dt", null, "year"), h("dd", null, p.year)],
-            h("dt", null, "summary"), h("dd", null, p.summary),
-            p.details && [h("dt", null, "details"), h("dd", null, p.details)],
-            p.tags && p.tags.length ? [h("dt", null, "type"), h("dd", null, p.tags.join(", "))] : null,
-            p.owner && [h("dt", null, "owner"), h("dd", null, p.owner)],
-            p.link && [h("dt", null, "link"), h("dd", null, link(p.link))]),
-        ];
+        return [projectView(p), h("p", { class: "dim" }, "Back to ", cmd("projects"), ".")];
       },
     },
 
@@ -298,6 +289,27 @@
     ];
   }
 
+  // Full view of one project. Used by the `project` command and by the popup.
+  function projectView(p, titleId) {
+    const facts = [
+      p.status && ["status", h("span", { class: "tag " + p.status }, "[" + p.status + "]")],
+      p.year && ["year", p.year],
+      p.owner && ["owner", p.owner],
+      p.link && ["link", link(p.link, bare(p.link))],
+    ].filter(Boolean);
+    return [
+      h("div", { class: "profile" },
+        h("div", null,
+          h("h2", { class: "profile-name", id: titleId || null }, p.name),
+          p.platform && h("div", { class: "role" }, "for " + p.platform))),
+      p.image && h("img", { class: "shot", src: p.image, alt: "Screenshot of " + p.name, loading: "lazy" }),
+      h("p", null, p.summary),
+      p.details && h("p", null, p.details),
+      p.tags && p.tags.length ? [h("h3", { class: "sub" }, "type of work"), tags(p.tags, "Type of work")] : null,
+      facts.length ? [h("h3", { class: "sub" }, "details"), h("dl", { class: "kv" }, facts.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+    ];
+  }
+
   const tags = (list, label) => (list && list.length ? h("ul", { class: "tags", "aria-label": label || "Expertise" }, list.map((t) => h("li", null, t))) : null);
 
   function initials(name) {
@@ -405,9 +417,9 @@
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-cmd]");
     if (btn) { if (modal.open) modal.close(); submit(btn.dataset.cmd, { animate: true }); return; }
-    // A team card opens the member popup. Links inside it still work, and selecting text does not trigger it.
-    const person = e.target.closest("a") ? null : e.target.closest("[data-member]");
-    if (person && !String(getSelection())) { showMember(people.findIndex((m) => m.id === person.dataset.member)); return; }
+    // Team cards and project rows open a popup. Links inside them still work, and selecting text does not trigger it.
+    const opener = e.target.closest("a") ? null : e.target.closest("[data-open]");
+    if (opener && !String(getSelection())) { const [k, id] = opener.dataset.open.split(":"); openById(k, id); return; }
     // Clicking empty terminal space focuses the prompt, without breaking text selection or links.
     if (screen.contains(e.target) && !e.target.closest("a, button, input") && !String(getSelection())) {
       input.focus({ preventScroll: true });
@@ -429,54 +441,67 @@
     });
   }
 
-  /* ── member popup ── */
-  const people = D.team.filter((m) => m.id);
+  /* ── popups for members and projects ── */
+  const KINDS = {
+    member: { items: D.team.filter((m) => m.id), path: "team", label: "member", view: (m) => profile(m, "modal-name") },
+    project: { items: D.projects.filter((p) => p.id), path: "projects", label: "project", view: (p) => projectView(p, "modal-name") },
+  };
   const modal = h("dialog", { class: "modal", "aria-labelledby": "modal-name" });
   document.body.append(modal);
+  let kind = "member";
   let current = 0;
 
-  function showMember(index, dir, focus) {
-    current = (index + people.length) % people.length;
-    const m = people[current];
-    const prev = people[(current - 1 + people.length) % people.length];
-    const next = people[(current + 1) % people.length];
-    const many = people.length > 1;
+  function show(k, index, dir, focus) {
+    const items = KINDS[k].items;
+    if (!items.length) return;
+    kind = k;
+    current = (index + items.length) % items.length;
+    const it = items[current];
+    const prev = items[(current - 1 + items.length) % items.length];
+    const next = items[(current + 1) % items.length];
     modal.replaceChildren(
       h("div", { class: "modal-bar" },
         h("span", { class: "dots", "aria-hidden": "true" }, h("i"), h("i"), h("i")),
-        h("span", { class: "bar-title" }, "~/team/" + m.id),
-        h("span", { class: "modal-count" }, (current + 1) + " / " + people.length),
+        h("span", { class: "bar-title" }, "~/" + KINDS[k].path + "/" + it.id),
+        h("span", { class: "modal-count" }, (current + 1) + " / " + items.length),
         h("button", { type: "button", class: "modal-close", "data-modal": "close", "aria-label": "Close" }, "close")),
-      h("div", { class: "modal-body" + (dir ? " from-" + dir : "") }, profile(m, "modal-name")),
-      many && h("div", { class: "modal-nav" },
-        h("button", { type: "button", "data-modal": "prev", "aria-label": "Previous member: " + prev.name }, h("span", { "aria-hidden": "true" }, "← "), h("span", { class: "who" }, prev.name)),
-        h("button", { type: "button", "data-modal": "next", "aria-label": "Next member: " + next.name }, h("span", { class: "who" }, next.name), h("span", { "aria-hidden": "true" }, " →"))));
+      h("div", { class: "modal-body" + (dir ? " from-" + dir : "") }, KINDS[k].view(it)),
+      items.length > 1 && h("div", { class: "modal-nav" },
+        h("button", { type: "button", "data-modal": "prev", "aria-label": "Previous " + KINDS[k].label + ": " + prev.name }, h("span", { "aria-hidden": "true" }, "← "), h("span", { class: "who" }, prev.name)),
+        h("button", { type: "button", "data-modal": "next", "aria-label": "Next " + KINDS[k].label + ": " + next.name }, h("span", { class: "who" }, next.name), h("span", { "aria-hidden": "true" }, " →"))));
     if (!modal.open) { modal.showModal(); root.classList.add("modal-open"); }
     const target = modal.querySelector('[data-modal="' + (focus || "close") + '"]');
     if (target) target.focus({ preventScroll: true });
     emit("swg:cmd");
   }
 
+  function openById(k, id) {
+    if (!KINDS[k]) return false;
+    const i = KINDS[k].items.findIndex((x) => x.id === id);
+    if (i >= 0) show(k, i);
+    return i >= 0;
+  }
+
   modal.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-modal]");
     if (e.target === modal || (btn && btn.dataset.modal === "close")) modal.close();
-    else if (btn && btn.dataset.modal === "prev") showMember(current - 1, "left", "prev");
-    else if (btn && btn.dataset.modal === "next") showMember(current + 1, "right", "next");
+    else if (btn && btn.dataset.modal === "prev") show(kind, current - 1, "left", "prev");
+    else if (btn && btn.dataset.modal === "next") show(kind, current + 1, "right", "next");
   });
   modal.addEventListener("keydown", (e) => {
-    if (people.length < 2) return;
-    if (e.key === "ArrowLeft") { e.preventDefault(); showMember(current - 1, "left", "prev"); }
-    else if (e.key === "ArrowRight") { e.preventDefault(); showMember(current + 1, "right", "next"); }
+    if (KINDS[kind].items.length < 2) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); show(kind, current - 1, "left", "prev"); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); show(kind, current + 1, "right", "next"); }
   });
   modal.addEventListener("close", () => root.classList.remove("modal-open"));
-  // Swipe left or right to move between members on touch screens.
+  // Swipe left or right to move to the next or previous one on touch screens.
   let swipe = null;
   modal.addEventListener("touchstart", (e) => { swipe = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
   modal.addEventListener("touchend", (e) => {
-    if (!swipe || people.length < 2) return;
+    if (!swipe || KINDS[kind].items.length < 2) return;
     const dx = e.changedTouches[0].clientX - swipe.x, dy = e.changedTouches[0].clientY - swipe.y;
     swipe = null;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) showMember(current + (dx < 0 ? 1 : -1), dx < 0 ? "right" : "left");
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(kind, current + (dx < 0 ? 1 : -1), dx < 0 ? "right" : "left");
   }, { passive: true });
 
   /* ── boot ── */
