@@ -73,8 +73,7 @@ a:hover, a:focus-visible { color: var(--accent); }
 .dots i:nth-child(2) { background: #febc2e; }
 .dots i:nth-child(3) { background: #28c840; }
 .bar-title { flex: 1; text-align: center; color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar-org { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 7px; }
-.bar-org img { display: block; border-radius: 4px; }
+.bar-org { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; white-space: nowrap; }
 .tabs { display: flex; gap: 2px; padding: 0 10px; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button {
