@@ -95,7 +95,7 @@
         // The whole card is clickable and opens the member's profile in a popup.
         const card = (m) => h("li", { class: "card", "data-open": m.id ? "member:" + m.id : null },
           h("div", { class: "card-head" },
-            h("span", { class: "avatar", "aria-hidden": "true" }, initials(m.name)),
+            avatar(m),
             h("div", null,
               h("div", { class: "name" }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
               m.role && h("div", { class: "role" }, m.role))),
@@ -142,6 +142,7 @@
             p.year && h("span", { class: "dim" }, p.year)),
           h("p", null, p.summary),
           tags(p.tags, "Type of work"),
+          (p.team || []).length ? h("div", { class: "crew" }, p.team.map((id) => D.team.find((m) => m.id === id)).filter(Boolean).map((m) => avatar(m, "tiny"))) : null,
           h("div", { class: "meta more" }, h("button", { type: "button", class: "kbd" }, "view project"))))),
         h("p", { class: "dim tip" }, "Click a project to open it."),
       ],
@@ -272,10 +273,11 @@
       m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
       m.email && ["email", link("mailto:" + m.email, m.email)],
     ].filter(Boolean);
-    const empty = !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
+    const mine = D.projects.filter((p) => (p.team || []).includes(m.id));
+    const empty = !mine.length && !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
     return [
       h("div", { class: "profile" },
-        h("span", { class: "avatar big", "aria-hidden": "true" }, initials(m.name)),
+        avatar(m, "big"),
         h("div", null,
           h("h2", { class: "profile-name", id: titleId || null }, m.name, m.km && h("span", { class: "km", lang: "km" }, m.km)),
           m.role && h("div", { class: "role" }, m.role))),
@@ -284,6 +286,7 @@
       section("experience", m.experience),
       section("education", m.education),
       section("selected work", m.work),
+      mine.length ? [h("h3", { class: "sub" }, "projects"), h("ul", { class: "chips" }, mine.map((p) => h("li", null, chip("project", p))))] : null,
       links.length ? [h("h3", { class: "sub" }, "links"), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
       empty && h("p", { class: "dim" }, "No details added yet."),
     ];
@@ -297,6 +300,7 @@
       p.owner && ["owner", p.owner],
       p.link && ["link", link(p.link, bare(p.link))],
     ].filter(Boolean);
+    const crew = (p.team || []).map((id) => D.team.find((m) => m.id === id)).filter(Boolean);
     return [
       h("div", { class: "profile" },
         h("div", null,
@@ -306,8 +310,24 @@
       h("p", null, p.summary),
       p.details && h("p", null, p.details),
       p.tags && p.tags.length ? [h("h3", { class: "sub" }, "type of work"), tags(p.tags, "Type of work")] : null,
+      crew.length ? [h("h3", { class: "sub" }, "team"), h("ul", { class: "chips" }, crew.map((m) => h("li", null, chip("member", m))))] : null,
       facts.length ? [h("h3", { class: "sub" }, "details"), h("dl", { class: "kv" }, facts.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
     ];
+  }
+
+  // A button that opens another member or project popup.
+  const chip = (k, it) => h("button", { type: "button", class: "chip", "data-open": k + ":" + it.id },
+    k === "member" ? avatar(it, "tiny") : null, it.name);
+
+  // A member's photo, or their initials when there is no photo (or it fails to load).
+  function avatar(m, size) {
+    const box = h("span", { class: "avatar" + (size ? " " + size : ""), "aria-hidden": "true" }, initials(m.name));
+    if (m.photo) {
+      const img = h("img", { src: m.photo, alt: "", loading: "lazy" });
+      img.addEventListener("error", () => img.remove());
+      box.append(img);
+    }
+    return box;
   }
 
   const tags = (list, label) => (list && list.length ? h("ul", { class: "tags", "aria-label": label || "Expertise" }, list.map((t) => h("li", null, t))) : null);

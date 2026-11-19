@@ -46,6 +46,7 @@ window.SWG = {
   //   experience, education, work: lists of { title, place, years } shown in the detail view (optional)
   //   website, linkedin, scholar, huggingface: full URLs (optional)
   //   github:     username only (optional)   email: optional   km: Khmer name (optional)
+  //   photo:      path to a square photo, e.g. "assets/img/team/sobon.jpg" (optional, initials are shown without it)
   team: [
     {
       id: "sovanreach",
@@ -113,6 +114,7 @@ window.SWG = {
   //   tags:     short labels for the kind of work
   //   status:   "active" | "planned" | "done" (optional)   year: optional
   //   details, owner, link: optional, shown when the project is opened
+  //   team:     ids of the members working on it, e.g. ["sovanreach", "sobon"]. Links projects and profiles both ways.
   //   image:    path to a screenshot or diagram, e.g. "assets/img/projects/khmer-asr.png" (optional)
   projects: [
     {
@@ -121,7 +123,7 @@ window.SWG = {
       platform: "EventKH",
       summary: "Attendees check in to events on EventKH with their face.",
       tags: ["Face recognition"],
-      status: "", year: "", details: "", owner: "", link: "",
+      team: [], status: "", year: "", details: "", owner: "", link: "",
     },
     {
       id: "khmer-asr",
@@ -129,7 +131,7 @@ window.SWG = {
       platform: "Chaktomuk (CTM)",
       summary: "Khmer speech recognition for the Chaktomuk (CTM) platform. It turns spoken Khmer into text.",
       tags: ["Speech recognition", "Khmer"],
-      status: "", year: "", details: "", owner: "", link: "",
+      team: [], status: "", year: "", details: "", owner: "", link: "",
     },
     {
       id: "global-search",
@@ -137,7 +139,7 @@ window.SWG = {
       platform: "Chaktomuk (CTM)",
       summary: "Search for the Chaktomuk (CTM) platform. OCR reads the Khmer text in documents and images so it can be searched.",
       tags: ["OCR", "Search", "Khmer"],
-      status: "", year: "", details: "", owner: "", link: "",
+      team: [], status: "", year: "", details: "", owner: "", link: "",
     },
     {
       id: "face-attendance",
@@ -145,7 +147,7 @@ window.SWG = {
       platform: "University Management System (UMS)",
       summary: "Students are marked present by face in the University Management System (UMS).",
       tags: ["Face recognition"],
-      status: "", year: "", details: "", owner: "", link: "",
+      team: [], status: "", year: "", details: "", owner: "", link: "",
     },
   ],
 
