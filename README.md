@@ -1,43 +1,118 @@
-# AI & Big Data, DTWG Sub Working Group
+<div align="center">
 
-Terminal-themed portfolio of the **AI & Big Data Sub Working Group** of the Digital Transformation Working Group (DTWG).
+<img src="assets/img/logo.svg" alt="AI & Big Data logo" width="128" height="128">
 
-Plain HTML, CSS and JavaScript. No build step, no external dependencies.
+# AI & Big Data
 
-## Edit the content
+**Sub Working Group of the Digital Transformation Working Group (DTWG)**<br>
+Ministry of Post and Telecommunications, Cambodia
 
-All content lives in [`assets/js/data.js`](assets/js/data.js): group description, focus areas, team, projects and contact details. Entries marked `TODO` are placeholders.
+<p>
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/GitHub%20Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white" alt="GitHub Pages">
+</p>
+<p>
+  <img src="https://img.shields.io/badge/font-Khmer%20Digital-3ee07f?style=flat-square" alt="Font: Khmer Digital">
+  <img src="https://img.shields.io/badge/dependencies-none-3ee07f?style=flat-square" alt="Dependencies: none">
+  <img src="https://img.shields.io/badge/build%20step-none-3ee07f?style=flat-square" alt="Build step: none">
+</p>
 
-```
-index.html              page shell
-404.html                not-found page
-assets/js/data.js       content  ← edit this
-assets/js/terminal.js   terminal behaviour and commands
-assets/css/style.css    themes and layout
-assets/fonts/           Khmer Digital font files
-```
+[Live site](https://ai-dtwg.github.io) · [Team](https://ai-dtwg.github.io/#team) · [Projects](https://ai-dtwg.github.io/#projects) · [Contact](https://ai-dtwg.github.io/#contact)
 
-## Preview locally
+</div>
+
+## Overview
+
+This repository holds the website of the AI & Big Data sub working group. The site looks and works like a terminal: visitors can type commands or tap the tabs to read about the group, its team, its projects and how to get in touch.
+
+It is a static site. There is nothing to install and nothing to build.
+
+## Features
+
+- Terminal interface with command history, tab completion and clickable commands
+- Sections for about, team, projects and contact, each with a direct link such as `/#team`
+- Four color themes: green, amber, ice and paper
+- Works on phones, tablets and desktops
+- Khmer text set in the Khmer Digital typeface
+- All content kept in one file
+
+## Getting started
+
+Clone the repository and serve the folder with any static file server.
 
 ```sh
+git clone https://github.com/ai-dtwg/ai-dtwg.github.io.git
+cd ai-dtwg.github.io
 python3 -m http.server 8000
-# open http://localhost:8000
 ```
 
-## Deploy
+Then open <http://localhost:8000>.
 
-This repository is named `ai-dtwg.github.io`, so GitHub Pages serves the `main` branch at
-<https://ai-dtwg.github.io>. Push to `main` to publish. If the site does not appear, check
-**Settings → Pages → Build and deployment → Deploy from a branch → `main` / `(root)`**.
+## Project structure
 
-## Terminal commands
+```
+.
+├── index.html              Page shell
+├── 404.html                Not found page
+├── assets
+│   ├── css/style.css       Themes and layout
+│   ├── js/data.js          Site content
+│   ├── js/terminal.js      Terminal behavior and commands
+│   ├── img/                Logos
+│   └── fonts/              Khmer Digital font files and license
+└── README.md
+```
 
-`help` · `about` · `team` · `projects` · `project <id>` · `contact` · `all` · `banner` · `theme [green|amber|ice|paper]` · `clear`
+## Editing content
 
-A section can be linked directly, e.g. `https://ai-dtwg.github.io/#team`.
+All text on the site comes from [`assets/js/data.js`](assets/js/data.js). Edit that file to change:
 
-## Font
+| Section | Key in `data.js` |
+| --- | --- |
+| Group name, tagline and description | `group` |
+| Parent organization and ministry | `org` |
+| Expertise | `focus` |
+| Lead, members and interns | `team` |
+| Projects | `projects` |
+| Contact details | `contact` |
 
-Khmer text uses [Khmer Digital](https://github.com/pisey-suon/mptc-khmerDigitalFont), the Khmer Unicode typeface released by the
-Ministry of Post and Telecommunications of Cambodia, under the SIL Open Font License 1.1
-(see [`assets/fonts/OFL.txt`](assets/fonts/OFL.txt)).
+Each team entry has a `group` of `lead`, `member` or `intern`, which decides the block it appears in. Empty fields are hidden.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `help` | List commands |
+| `about` | About the group |
+| `team` | Who is on the team |
+| `projects` | What the group is working on |
+| `project <id>` | Show one project |
+| `contact` | Contact details |
+| `all` | Show everything |
+| `banner` | Show the banner |
+| `theme [green\|amber\|ice\|paper]` | Change colors |
+| `clear` | Clear the screen |
+
+## Deployment
+
+The site is published with GitHub Pages from the `main` branch. Every push to `main` goes live at <https://ai-dtwg.github.io> within a minute or two.
+
+If the site does not update, check **Settings → Pages** and make sure the source is set to **Deploy from a branch**, `main`, `/ (root)`.
+
+## Credits
+
+- [Khmer Digital](https://github.com/pisey-suon/mptc-khmerDigitalFont) typeface by the Ministry of Post and Telecommunications, under the SIL Open Font License 1.1. See [`assets/fonts/OFL.txt`](assets/fonts/OFL.txt).
+- The ministry emblem belongs to the Ministry of Post and Telecommunications of Cambodia.
+
+<br>
+
+<div align="center">
+
+<a href="https://mptc.gov.kh"><img src="assets/img/mptc-logo.png" alt="Ministry of Post and Telecommunications" width="72" height="72"></a>
+
+**Digital Transformation Working Group**<br>
+Ministry of Post and Telecommunications
+
+</div>

@@ -73,7 +73,8 @@ a:hover, a:focus-visible { color: var(--accent); }
 .dots i:nth-child(2) { background: #febc2e; }
 .dots i:nth-child(3) { background: #28c840; }
 .bar-title { flex: 1; text-align: center; color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar-org { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; }
+.bar-org { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 7px; }
+.bar-org img { display: block; border-radius: 4px; }
 .tabs { display: flex; gap: 2px; padding: 0 10px; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button {
@@ -119,6 +120,15 @@ a:hover, a:focus-visible { color: var(--accent); }
 .banner-meta .km { display: block; color: var(--fg); font-size: 16px; font-weight: 500; }
 .banner-meta .org { color: var(--dim); }
 .tagline { color: var(--accent-2); }
+.ministry {
+  display: inline-flex; align-items: center; gap: 12px; margin: 4px 0 6px; padding: 8px 14px 8px 8px; max-width: 100%;
+  border: 1px solid var(--line); border-radius: 3px; background: var(--panel); color: var(--fg);
+}
+.ministry:hover, .ministry:focus-visible { border-color: var(--accent); color: var(--fg); }
+.ministry img { flex: none; width: 44px; height: 44px; background: #fff; border-radius: 50%; }
+.ministry span { display: block; min-width: 0; }
+.ministry .km { font-weight: 500; line-height: 1.7; }
+.ministry .en { color: var(--dim); font-size: 13px; line-height: 1.5; }
 
 /* ── section output ───────────────────────────────────── */
 .h { margin: 2px 0 10px; font-size: inherit; font-weight: 700; color: var(--accent); display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }

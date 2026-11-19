@@ -185,6 +185,11 @@
           h("span", { class: "km", lang: "km" }, D.group.km),
           h("span", { class: "org" }, D.group.kind + " · " + D.org.name + " (" + D.org.short + ")")),
         h("p", { class: "tagline" }, "> " + D.group.tagline),
+        D.org.parent && h("a", { class: "ministry", href: D.org.parent.url, target: "_blank", rel: "noopener noreferrer" },
+          h("img", { src: D.org.parent.logo, alt: "", width: "44", height: "44" }),
+          h("span", null,
+            h("span", { class: "km", lang: "km" }, D.org.parent.km),
+            h("span", { class: "en" }, D.org.parent.name + " (" + D.org.parent.short + ")"))),
       ],
     },
 

@@ -7,6 +7,14 @@ window.SWG = {
     short: "DTWG",
     name: "Digital Transformation Working Group",
     km: "ក្រុមការងារបរិវត្តកម្មឌីជីថល",
+    // The ministry DTWG belongs to
+    parent: {
+      short: "MPTC",
+      name: "Ministry of Post and Telecommunications",
+      km: "ក្រសួងប្រៃសណីយ៍និងទូរគមនាគមន៍",
+      url: "https://mptc.gov.kh",
+      logo: "assets/img/mptc-logo.png",
+    },
   },
 
   group: {
