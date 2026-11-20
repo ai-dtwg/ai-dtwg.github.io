@@ -1,21 +1,55 @@
+/*
+==================================================================================
+|| AI & Big Data, DTWG | Terminal                                               ||
+||                                                                              ||
+|| Commands, popups, language switch and everything the visitor interacts       ||
+|| with. Content comes from data.js; the 3D background lives in scene.js.       ||
+||                                                                              ||
+|| Developed by : KONG Vungsovanreach                                           ||
+|| Position     : Lead, AI & Big Data Sub Working Group, DTWG (MPTC)            ||
+|| Date         : 20 November 2026                                              ||
+|| Repository   : https://github.com/ai-dtwg/ai-dtwg.github.io                  ||
+==================================================================================
+*/
 (() => {
   "use strict";
 
-  const D = window.SWG;
+  /* ----------------------------------------------------------------------
+   * 1. Setup and state
+   * ---------------------------------------------------------------------- */
+
+  const D = window.SWG; // all site content, defined in data.js
   const $ = (s) => document.querySelector(s);
+
+  // Page elements
   const out = $("#out");
   const form = $("#prompt");
   const input = $("#cmd");
   const screen = $("#screen");
   const tabs = [...document.querySelectorAll(".tabs button:not(.lang-toggle)")];
   const root = document.documentElement;
+
   // Effects (typing, motion, 3D background) can be switched off with the `fx` command.
   const still = () => root.dataset.fx === "off";
   const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
+
+  // Options the visitor can change
   const THEMES = ["green", "amber", "ice", "paper"];
   const LANGS = { en: "English", km: "ខ្មែរ" };
-  let lang = "en";
-  let lastSection = "about";
+  let lang = "en";            // current language code
+  let lastSection = "about";  // last section shown, reprinted when the language changes
+
+  // Prompt state
+  const history = [];  // commands typed so far (note: this hides window.history inside this file)
+  let histPos = 0;     // position in history while pressing the up and down keys
+  let busy = false;    // true while a command is being typed out or printed
+
+  /* ----------------------------------------------------------------------
+   * 2. Language
+   * Interface text is translated here. Content is translated in data.js
+   * with "_km" fields.
+   * ---------------------------------------------------------------------- */
+
   // Interface text in Khmer, keyed by the English text. Anything missing falls back to English.
   const KM = {
     "list commands": "បង្ហាញបញ្ជីពាក្យបញ្ជា",
@@ -69,14 +103,38 @@
     "animation": "ចលនា",
     "theme": "ពណ៌",
   };
+  // Translate a piece of interface text.
   const t = (text) => (lang === "km" && KM[text]) || text;
   // Content from data.js: uses the "_km" version of a field when Khmer is on and one exists.
   const L = (obj, key) => (lang === "km" && obj[key + "_km"]) || obj[key];
-  const history = [];
-  let histPos = 0;
-  let busy = false;
 
-  /* ── tiny DOM helpers (all content goes in as text nodes, never innerHTML) ── */
+  // Switch language and update the button in the tab bar.
+  function setLang(code) {
+    lang = code;
+    root.lang = code;
+    const toggle = $("#lang-toggle");
+    if (toggle) {
+      // The button shows the language you would switch to.
+      toggle.replaceChildren(...(code === "km"
+        ? [h("span", { class: "full" }, "English"), h("span", { class: "short" }, "EN")]
+        : ["ខ្មែរ"]));
+      toggle.lang = code === "km" ? "en" : "km";
+      toggle.setAttribute("aria-label", code === "km" ? "Switch to English" : "ប្តូរទៅភាសាខ្មែរ");
+    }
+  }
+
+  // The line under the first screen that tells visitors what to do next.
+  const hint = () => (lang === "km"
+    ? h("p", { class: "dim" }, "វាយ ", cmd("help"), " ដើម្បីមើលពាក្យបញ្ជា ឬចុចផ្ទាំងខាងលើ។")
+    : h("p", { class: "dim" }, "Type ", cmd("help"), " to see the commands, or tap a tab above."));
+
+  /* ----------------------------------------------------------------------
+   * 3. Small helpers
+   * Elements are built with h(), never with innerHTML.
+   * ---------------------------------------------------------------------- */
+
+  // Build an element: h("p", { class: "dim" }, "text", childNode, ...).
+  // Children are added as text nodes or elements, never as HTML, so data cannot inject markup.
   function h(tag, attrs, ...kids) {
     const el = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs || {})) {
@@ -91,6 +149,7 @@
     return el;
   }
 
+  // A link. Only http, https, mailto and tel addresses become links; anything else is shown as text.
   function link(href, label) {
     if (!/^(https?:|mailto:|tel:)/i.test(href || "")) return document.createTextNode(label || href || "");
     const ext = /^https?:/i.test(href);
@@ -100,15 +159,49 @@
   // A clickable command, e.g. cmd("team") → runs `team` when clicked.
   const cmd = (text) => h("button", { type: "button", class: "kbd", "data-cmd": text }, text);
 
+  // Section heading: the command name with its Khmer label beside it.
   const heading = (title, km) => h("h2", { class: "h" }, title, km && h("span", { class: "km", lang: "km" }, km));
 
+  // The prompt, e.g. guest@ai-bigdata:~$
   function ps1() {
     return h("span", { class: "ps1" },
       h("span", { class: "long" }, "guest@" + D.group.host, h("span", { class: "sep" }, ":")),
       h("span", { class: "path" }, "~"), h("span", { class: "sep" }, "$"));
   }
 
-  /* ── banner ── */
+  // A web address without the protocol or trailing slash, for display.
+  const bare = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  // Initials for the avatar box. Titles such as "Dr." and "Mr." are skipped.
+  function initials(name) {
+    const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w) && !w.endsWith("."));
+    return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+  }
+
+  // A row of small labels, used for expertise and for the type of work on a project.
+  const tags = (list, label) => (list && list.length ? h("ul", { class: "tags", "aria-label": label || "Expertise" }, list.map((t) => h("li", null, t))) : null);
+
+  // A member's photo, or their initials when there is no photo (or it fails to load).
+  function avatar(m, size) {
+    const box = h("span", { class: "avatar" + (size ? " " + size : ""), "aria-hidden": "true" }, initials(m.name));
+    if (m.photo) {
+      const img = h("img", { src: m.photo, alt: "", loading: "lazy" });
+      img.addEventListener("error", () => img.remove());
+      box.append(img);
+    }
+    return box;
+  }
+
+  // A button that opens another member or project popup.
+  const chip = (k, it) => h("button", { type: "button", class: "chip", "data-open": k + ":" + it.id },
+    k === "member" ? avatar(it, "tiny") : null, L(it, "name"));
+
+  /* ----------------------------------------------------------------------
+   * 4. Views
+   * Larger pieces of output shared by commands and popups.
+   * ---------------------------------------------------------------------- */
+
+  // Block letters for the banner. Each letter is five rows tall.
   const GLYPHS = {
     A: [" ███ ", "█   █", "█████", "█   █", "█   █"],
     B: ["████ ", "█   █", "████ ", "█   █", "████ "],
@@ -119,12 +212,83 @@
     "&": [" ██  ", "█  █ ", " ██ █", "█  █ ", " ██ █"],
     " ": ["  ", "  ", "  ", "  ", "  "],
   };
+  // Turn text into banner rows using the block letters above.
   function bigText(text) {
     const chars = [...text.toUpperCase()].map((c) => GLYPHS[c]).filter(Boolean);
     return [0, 1, 2, 3, 4].map((row) => chars.map((g) => g[row]).join(" ")).join("\n");
   }
 
-  /* ── commands ── */
+  // Full profile of one member. Used by the `member` command and by the popup.
+  function profile(m, titleId) {
+    const rows = (items) => h("ul", { class: "rows" }, items.map((it) => h("li", null,
+      h("span", { class: "row-title" }, it.title),
+      it.place && h("span", { class: "row-place" }, it.place),
+      it.years && h("span", { class: "row-years" }, it.years))));
+    const section = (title, items) => (items && items.length ? [h("h3", { class: "sub" }, title), rows(items)] : null);
+    const links = [
+      m.website && [t("website"), link(m.website, bare(m.website))],
+      m.github && ["github", link("https://github.com/" + m.github, "@" + m.github)],
+      m.linkedin && ["linkedin", link(m.linkedin, bare(m.linkedin).replace(/^www\./, ""))],
+      m.scholar && ["scholar", link(m.scholar, "Google Scholar")],
+      m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
+      m.email && [t("email"), link("mailto:" + m.email, m.email)],
+    ].filter(Boolean);
+    const mine = D.projects.filter((p) => (p.team || []).includes(m.id));
+    const empty = !mine.length && !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
+    return [
+      h("div", { class: "profile" },
+        avatar(m, "big"),
+        h("div", null,
+          h("h2", { class: "profile-name", id: titleId || null }, L(m, "name"), m.km && h("span", { class: "km", lang: "km" }, m.km)),
+          m.role && h("div", { class: "role" }, L(m, "role")))),
+      m.bio && h("p", null, L(m, "bio")),
+      m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, t("expertise")), tags(m.expertise)] : null,
+      section(t("experience"), m.experience),
+      section(t("education"), m.education),
+      section(t("selected work"), m.work),
+      mine.length ? [h("h3", { class: "sub" }, t("projects")), h("ul", { class: "chips" }, mine.map((p) => h("li", null, chip("project", p))))] : null,
+      links.length ? [h("h3", { class: "sub" }, t("links")), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+      empty && h("p", { class: "dim" }, t("No details added yet.")),
+    ];
+  }
+
+  // Full view of one project. Used by the `project` command and by the popup.
+  function projectView(p, titleId) {
+    const facts = [
+      p.status && [t("status"), h("span", { class: "tag " + p.status }, "[" + p.status + "]")],
+      p.year && [t("year"), p.year],
+      p.owner && [t("owner"), p.owner],
+      p.link && [t("link"), link(p.link, bare(p.link))],
+    ].filter(Boolean);
+    const crew = (p.team || []).map((id) => D.team.find((m) => m.id === id)).filter(Boolean);
+    return [
+      h("div", { class: "profile" },
+        h("div", null,
+          h("h2", { class: "profile-name", id: titleId || null }, L(p, "name")),
+          p.platform && h("div", { class: "role" }, t("for ") + p.platform))),
+      p.image && h("img", { class: "shot", src: p.image, alt: "Screenshot of " + p.name, loading: "lazy" }),
+      h("p", null, L(p, "summary")),
+      p.details && h("p", null, L(p, "details")),
+      p.tags && p.tags.length ? [h("h3", { class: "sub" }, t("type of work")), tags(p.tags, "Type of work")] : null,
+      crew.length ? [h("h3", { class: "sub" }, t("team")), h("ul", { class: "chips" }, crew.map((m) => h("li", null, chip("member", m))))] : null,
+      facts.length ? [h("h3", { class: "sub" }, t("details")), h("dl", { class: "kv" }, facts.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
+    ];
+  }
+
+  // Apply a color theme and tell the 3D background to recolor itself.
+  function setTheme(name) {
+    root.dataset.theme = name;
+    const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", bg);
+    emit("swg:theme");
+  }
+
+  /* ----------------------------------------------------------------------
+   * 5. Commands
+   * ---------------------------------------------------------------------- */
+
+  // Each command has a description for `help`, an optional usage string, an optional
+  // complete() list for Tab completion, and run(args), which returns the nodes to print.
   const commands = {
     help: {
       desc: "list commands",
@@ -270,7 +434,7 @@
       usage: "[" + THEMES.join("|") + "]",
       complete: () => THEMES,
       run: (args) => {
-        const cur = document.documentElement.dataset.theme;
+        const cur = root.dataset.theme;
         const next = args[0] ? args[0].toLowerCase() : THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
         if (!THEMES.includes(next)) return h("p", { class: "err" }, "theme: unknown theme '" + args[0] + "'. Choose one of: " + THEMES.join(", "));
         setTheme(next);
@@ -334,118 +498,18 @@
     history: { hidden: true, run: () => h("p", null, history.map((c, i) => [String(i + 1).padStart(3) + "  " + c, h("br")])) },
     sudo: { hidden: true, run: () => h("p", { class: "err" }, "guest is not in the sudoers file. This incident will be reported.") },
   };
+  // Aliases
   commands.members = { hidden: true, run: commands.team.run };
   commands.home = { hidden: true, run: commands.banner.run };
 
-  const bare = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  /* ----------------------------------------------------------------------
+   * 6. Running commands
+   * ---------------------------------------------------------------------- */
 
-  // Full profile of one member. Used by the `member` command and by the popup.
-  function profile(m, titleId) {
-    const rows = (items) => h("ul", { class: "rows" }, items.map((it) => h("li", null,
-      h("span", { class: "row-title" }, it.title),
-      it.place && h("span", { class: "row-place" }, it.place),
-      it.years && h("span", { class: "row-years" }, it.years))));
-    const section = (title, items) => (items && items.length ? [h("h3", { class: "sub" }, title), rows(items)] : null);
-    const links = [
-      m.website && [t("website"), link(m.website, bare(m.website))],
-      m.github && ["github", link("https://github.com/" + m.github, "@" + m.github)],
-      m.linkedin && ["linkedin", link(m.linkedin, bare(m.linkedin).replace(/^www\./, ""))],
-      m.scholar && ["scholar", link(m.scholar, "Google Scholar")],
-      m.huggingface && ["hugging face", link(m.huggingface, bare(m.huggingface))],
-      m.email && [t("email"), link("mailto:" + m.email, m.email)],
-    ].filter(Boolean);
-    const mine = D.projects.filter((p) => (p.team || []).includes(m.id));
-    const empty = !mine.length && !m.bio && !(m.expertise && m.expertise.length) && !m.experience && !m.education && !m.work && !links.length;
-    return [
-      h("div", { class: "profile" },
-        avatar(m, "big"),
-        h("div", null,
-          h("h2", { class: "profile-name", id: titleId || null }, L(m, "name"), m.km && h("span", { class: "km", lang: "km" }, m.km)),
-          m.role && h("div", { class: "role" }, L(m, "role")))),
-      m.bio && h("p", null, L(m, "bio")),
-      m.expertise && m.expertise.length ? [h("h3", { class: "sub" }, t("expertise")), tags(m.expertise)] : null,
-      section(t("experience"), m.experience),
-      section(t("education"), m.education),
-      section(t("selected work"), m.work),
-      mine.length ? [h("h3", { class: "sub" }, t("projects")), h("ul", { class: "chips" }, mine.map((p) => h("li", null, chip("project", p))))] : null,
-      links.length ? [h("h3", { class: "sub" }, t("links")), h("dl", { class: "kv" }, links.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
-      empty && h("p", { class: "dim" }, t("No details added yet.")),
-    ];
-  }
-
-  // Full view of one project. Used by the `project` command and by the popup.
-  function projectView(p, titleId) {
-    const facts = [
-      p.status && [t("status"), h("span", { class: "tag " + p.status }, "[" + p.status + "]")],
-      p.year && [t("year"), p.year],
-      p.owner && [t("owner"), p.owner],
-      p.link && [t("link"), link(p.link, bare(p.link))],
-    ].filter(Boolean);
-    const crew = (p.team || []).map((id) => D.team.find((m) => m.id === id)).filter(Boolean);
-    return [
-      h("div", { class: "profile" },
-        h("div", null,
-          h("h2", { class: "profile-name", id: titleId || null }, L(p, "name")),
-          p.platform && h("div", { class: "role" }, t("for ") + p.platform))),
-      p.image && h("img", { class: "shot", src: p.image, alt: "Screenshot of " + p.name, loading: "lazy" }),
-      h("p", null, L(p, "summary")),
-      p.details && h("p", null, L(p, "details")),
-      p.tags && p.tags.length ? [h("h3", { class: "sub" }, t("type of work")), tags(p.tags, "Type of work")] : null,
-      crew.length ? [h("h3", { class: "sub" }, t("team")), h("ul", { class: "chips" }, crew.map((m) => h("li", null, chip("member", m))))] : null,
-      facts.length ? [h("h3", { class: "sub" }, t("details")), h("dl", { class: "kv" }, facts.map(([k, v]) => [h("dt", null, k), h("dd", null, v)]))] : null,
-    ];
-  }
-
-  // A button that opens another member or project popup.
-  const chip = (k, it) => h("button", { type: "button", class: "chip", "data-open": k + ":" + it.id },
-    k === "member" ? avatar(it, "tiny") : null, L(it, "name"));
-
-  // A member's photo, or their initials when there is no photo (or it fails to load).
-  function avatar(m, size) {
-    const box = h("span", { class: "avatar" + (size ? " " + size : ""), "aria-hidden": "true" }, initials(m.name));
-    if (m.photo) {
-      const img = h("img", { src: m.photo, alt: "", loading: "lazy" });
-      img.addEventListener("error", () => img.remove());
-      box.append(img);
-    }
-    return box;
-  }
-
-  const tags = (list, label) => (list && list.length ? h("ul", { class: "tags", "aria-label": label || "Expertise" }, list.map((t) => h("li", null, t))) : null);
-
-  function initials(name) {
-    const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w) && !w.endsWith("."));
-    return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
-  }
-
-  function setLang(code) {
-    lang = code;
-    root.lang = code;
-    const toggle = $("#lang-toggle");
-    if (toggle) {
-      // The button shows the language you would switch to.
-      toggle.replaceChildren(...(code === "km"
-        ? [h("span", { class: "full" }, "English"), h("span", { class: "short" }, "EN")]
-        : ["ខ្មែរ"]));
-      toggle.lang = code === "km" ? "en" : "km";
-      toggle.setAttribute("aria-label", code === "km" ? "Switch to English" : "ប្តូរទៅភាសាខ្មែរ");
-    }
-  }
-
-  const hint = () => (lang === "km"
-    ? h("p", { class: "dim" }, "វាយ ", cmd("help"), " ដើម្បីមើលពាក្យបញ្ជា ឬចុចផ្ទាំងខាងលើ។")
-    : h("p", { class: "dim" }, "Type ", cmd("help"), " to see the commands, or tap a tab above."));
-
-  function setTheme(name) {
-    document.documentElement.dataset.theme = name;
-    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
-    document.querySelector('meta[name="theme-color"]').setAttribute("content", bg);
-    emit("swg:theme");
-  }
-
-  /* ── execution ── */
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  // Print the prompt and the command, run it, and print what it returns.
+  // opts.animate types the command out; opts.scroll === false leaves the page where it is.
   async function run(line, opts = {}) {
     line = line.trim();
     const typed = h("span", { class: "typed" });
@@ -477,6 +541,7 @@
     if (opts.scroll !== false) entry.scrollIntoView({ block: "start", behavior: still() ? "auto" : "smooth" });
   }
 
+  // Run a command from the visitor: one at a time, and remembered in the history.
   async function submit(line, opts) {
     if (busy) return;
     busy = true;
@@ -488,6 +553,7 @@
     busy = false;
   }
 
+  // Tab completion for command names and their arguments.
   function complete() {
     const value = input.value.replace(/^\s+/, "");
     const parts = value.split(/\s+/);
@@ -511,7 +577,11 @@
     }
   }
 
-  /* ── events ── */
+  /* ----------------------------------------------------------------------
+   * 7. Keyboard and mouse
+   * ---------------------------------------------------------------------- */
+
+  // Enter runs what was typed.
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const line = input.value;
@@ -519,6 +589,7 @@
     submit(line);
   });
 
+  // Up and down walk the history, Tab completes, Ctrl+L clears.
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
@@ -561,7 +632,11 @@
     });
   }
 
-  /* ── popups for members and projects ── */
+  /* ----------------------------------------------------------------------
+   * 8. Popups for members and projects
+   * ---------------------------------------------------------------------- */
+
+  // The two kinds of popup. Each lists its items, its path in the title bar and how to draw one item.
   const KINDS = {
     member: { items: D.team.filter((m) => m.id), path: "team", label: "member", view: (m) => profile(m, "modal-name") },
     project: { items: D.projects.filter((p) => p.id), path: "projects", label: "project", view: (p) => projectView(p, "modal-name") },
@@ -571,6 +646,8 @@
   let kind = "member";
   let current = 0;
 
+  // Open (or redraw) the popup on one item. dir slides the content in from that side,
+  // focus names the button that keeps keyboard focus after the redraw.
   function show(k, index, dir, focus) {
     const items = KINDS[k].items;
     if (!items.length) return;
@@ -598,6 +675,7 @@
     emit("swg:cmd");
   }
 
+  // Open the popup for a member or project id. Returns false when there is no such id.
   function openById(k, id) {
     if (!KINDS[k]) return false;
     const i = KINDS[k].items.findIndex((x) => x.id === id);
@@ -619,6 +697,7 @@
   }
   window.addEventListener("hashchange", openHash);
 
+  // Buttons inside the popup, and a click on the dimmed background to close it.
   modal.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-modal]");
     if (e.target === modal || (btn && btn.dataset.modal === "close")) modal.close();
@@ -631,6 +710,7 @@
     else if (btn && btn.dataset.modal === "prev") show(kind, current - 1, "left", "prev");
     else if (btn && btn.dataset.modal === "next") show(kind, current + 1, "right", "next");
   });
+  // Left and right arrow keys move between items. Escape is handled by the dialog itself.
   modal.addEventListener("keydown", (e) => {
     if (KINDS[kind].items.length < 2) return;
     if (e.key === "ArrowLeft") { e.preventDefault(); show(kind, current - 1, "left", "prev"); }
@@ -649,6 +729,10 @@
     swipe = null;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(kind, current + (dx < 0 ? 1 : -1), dx < 0 ? "right" : "left");
   }, { passive: true });
+
+  /* ----------------------------------------------------------------------
+   * 9. Structured data for search engines
+   * ---------------------------------------------------------------------- */
 
   // Describe the group and its members to search engines (schema.org JSON-LD), built from the same data.
   (function structuredData() {
@@ -684,7 +768,12 @@
     document.head.append(el);
   })();
 
-  /* ── boot ── */
+  /* ----------------------------------------------------------------------
+   * 10. Start
+   * ---------------------------------------------------------------------- */
+
+  // Runs once when the page loads: restore saved choices, print the first screen,
+  // then open whatever the address points at.
   (async function boot() {
     let saved = null;
     try { saved = localStorage.getItem("theme"); } catch (e) { /* storage unavailable */ }

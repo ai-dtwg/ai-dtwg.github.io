@@ -1,7 +1,16 @@
 /*
- * Site content. Edit this file only. There is no build step.
- * Anything marked TODO is a placeholder to replace.
- */
+==================================================================================
+|| AI & Big Data, DTWG | Site content                                           ||
+||                                                                              ||
+|| Everything shown on the site: group, expertise, team, projects, contact.     ||
+|| Edit this file only. There is no build step. TODO marks missing content.     ||
+||                                                                              ||
+|| Developed by : KONG Vungsovanreach                                           ||
+|| Position     : Lead, AI & Big Data Sub Working Group, DTWG (MPTC)            ||
+|| Date         : 20 November 2026                                              ||
+|| Repository   : https://github.com/ai-dtwg/ai-dtwg.github.io                  ||
+==================================================================================
+*/
 window.SWG = {
   // Public address of the site, used for shared links and search engines
   site: "https://ai-dtwg.com",

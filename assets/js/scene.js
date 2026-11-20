@@ -1,8 +1,18 @@
 /*
- * Animated background: a slowly turning data globe drawn with three.js.
- * Loaded as a module after the page is usable. three.js itself is only
- * fetched when effects are on, so the terminal never waits for it.
- *
+==================================================================================
+|| AI & Big Data, DTWG | 3D background                                          ||
+||                                                                              ||
+|| A slowly turning globe of data points drawn with three.js. Loaded after      ||
+|| the page is usable; three.js is only fetched when animation is on.           ||
+||                                                                              ||
+|| Developed by : KONG Vungsovanreach                                           ||
+|| Position     : Lead, AI & Big Data Sub Working Group, DTWG (MPTC)            ||
+|| Date         : 20 November 2026                                              ||
+|| Repository   : https://github.com/ai-dtwg/ai-dtwg.github.io                  ||
+==================================================================================
+*/
+
+/*
  * Talks to terminal.js through document events:
  *   swg:fx     detail: { on: boolean }   turn effects on or off
  *   swg:theme                            colors changed
